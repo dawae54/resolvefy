@@ -112,13 +112,6 @@ Adw.ApplicationWindow window {
           }
         }
 
-        Gtk.Button convert_button {
-          label: _("Convertir");
-          css-classes: ["suggested-action"];
-          halign: end;
-          sensitive: false;
-        }
-
         Gtk.Label status_label {
           label: _("Preparado");
           wrap: true;
@@ -127,6 +120,13 @@ Adw.ApplicationWindow window {
         }
 
         Gtk.ProgressBar progress_bar { text: _("Progreso"); }
+
+        Gtk.Button convert_button {
+          label: _("Convertir");
+          css-classes: ["suggested-action", "pill"];
+          halign: center;
+          sensitive: false;
+        }
       }
     }
   }
