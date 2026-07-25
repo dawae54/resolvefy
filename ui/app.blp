@@ -1,8 +1,7 @@
 using Gtk 4.0;
 using Adw 1;
 
-Adw.ApplicationWindow {
-    id: "window";
+Adw.ApplicationWindow window {
     title: "Resolvefy";
     default-width: 650;
     default-height: 650;
@@ -40,8 +39,7 @@ Adw.ApplicationWindow {
                         title: "Archivo de vídeo";
                         activatable: true;
 
-                        Gtk.Button {
-                            id: "pick_input_btn";
+                        Gtk.Button pick_input_btn {
                             label: "Seleccionar…";
                             valign: center;
                         }
@@ -49,20 +47,17 @@ Adw.ApplicationWindow {
                         activatable-widget: pick_input_btn;
                     }
 
-                    Gtk.Label {
-                        id: "input_path_label";
+                    Gtk.Label input_path_label {
                         label: "Ningún archivo seleccionado";
                         wrap: true;
                         xalign: 0.0;
                         css-classes: ["dim-label"];
                     }
 
-                    Adw.Revealer {
-                        id: "info_revealer";
+                    Gtk.Revealer info_revealer {
                         transition-type: slide-down;
 
-                        Gtk.Label {
-                            id: "info_label";
+                        Gtk.Label info_label {
                             wrap: true;
                             xalign: 0.0;
                         }
@@ -76,8 +71,7 @@ Adw.ApplicationWindow {
                         title: "Guardar como";
                         activatable: true;
 
-                        Gtk.Button {
-                            id: "pick_output_btn";
+                        Gtk.Button pick_output_btn {
                             label: "Seleccionar…";
                             valign: center;
                             sensitive: false;
@@ -86,16 +80,14 @@ Adw.ApplicationWindow {
                         activatable-widget: pick_output_btn;
                     }
 
-                    Gtk.Label {
-                        id: "output_path_label";
+                    Gtk.Label output_path_label {
                         label: "Sin ruta de salida";
                         wrap: true;
                         xalign: 0.0;
                         css-classes: ["dim-label"];
                     }
 
-                    Adw.ComboRow {
-                        id: "container_row";
+                    Adw.ComboRow container_row {
                         title: "Contenedor";
                     }
                 }
@@ -103,45 +95,38 @@ Adw.ApplicationWindow {
                 Adw.PreferencesGroup {
                     title: "Codificación";
 
-                    Adw.ComboRow {
-                        id: "mode_combo";
+                    Adw.ComboRow mode_combo {
                         title: "Modo de codificación";
                         selected: 0;
                     }
 
-                    Adw.EntryRow {
-                        id: "crf_row";
+                    Adw.EntryRow crf_row {
                         title: "Valor CRF (0–63)";
                         text: "30";
                     }
 
-                    Adw.EntryRow {
-                        id: "bitrate_row";
+                    Adw.EntryRow bitrate_row {
                         title: "Bitrate (kbps)";
                         text: "5000";
                         visible: false;
                     }
                 }
 
-                Gtk.Button {
-                    id: "convert_button";
+                Gtk.Button convert_button {
                     label: "Convertir";
                     css-classes: ["suggested-action"];
                     halign: end;
                     sensitive: false;
                 }
 
-                Gtk.Label {
-                    id: "status_label";
+                Gtk.Label status_label {
                     label: "Preparado";
                     wrap: true;
                     xalign: 0.0;
                     css-classes: ["dim-label"];
                 }
 
-                Gtk.ProgressBar {
-                    id: "progress_bar";
-                }
+                Gtk.ProgressBar progress_bar {}
             }
         }
     }
