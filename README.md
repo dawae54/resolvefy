@@ -2,7 +2,7 @@
 
 **PROJECT CREATED ENTIRELY WITH AI**
 
-Resolvefy is a video-to-AV1 converter written in Rust using libadwaita. The user interface and a large portion of the code were generated with the help of artificial intelligence.
+Resolvefy lets you convert a video (and its audio) to a codec compatible with Davinci Resolve on Linux.
 
 License: see LICENSE (GPL-3.0). Note: the "license" field in Cargo.toml may differ.
 
