@@ -365,7 +365,8 @@ pub fn build_ui(
                         // show text inside the progress bar
                         progress_bar.set_show_text(true);
                         let percent = (frac * 100.0).round() as u8;
-                        progress_bar.set_text(&format!("{}%", percent));
+                        let txt = format!("{}%", percent);
+                        progress_bar.set_text(Some(&txt));
                         ps.progress = 0.0;
                     }
                     if !ps.status.is_empty() {
@@ -381,7 +382,7 @@ pub fn build_ui(
                         ps.done = false;
                         status_label.set_label("Conversión completada.");
                         progress_bar.set_fraction(0.0);
-                        progress_bar.set_text("");
+                        progress_bar.set_text(None);
                         convert_button.set_sensitive(true);
                         convert_button.set_label("Convertir");
                     }
