@@ -11,9 +11,7 @@ fn main() {
     // Try blueprint-compiler first, then fallback to blueprint
     let try_cmd = |cmd: &str| {
         Command::new(cmd)
-            .arg(&input)
-            .arg("-o")
-            .arg(&out_ui)
+            .args(&["compile", &input, "-o", &out_ui])
             .status()
             .ok()
             .map(|s| s.success())
