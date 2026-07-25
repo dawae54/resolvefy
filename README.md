@@ -13,7 +13,6 @@ License: see LICENSE (GPL-3.0).
 - GTK4 and libadwaita development packages — e.g., libgtk-4-dev, libadwaita-1-dev
 - gir and GObject Introspection: libgirepository1.0-dev (if required by your distribution)
 - ffmpeg (with SVT-AV1 and libopus support) installed on the system
-- xdg-desktop-portal (for native dialogs used by rfd)
 
 Examples (Debian/Ubuntu):
 
@@ -53,6 +52,6 @@ Or run the compiled binary:
 ## Notes
 
 - Ensure the ffmpeg on your system includes the SVT-AV1 encoder and libopus if you need AV1/Opus encoding. Some distributions do not include SVT-AV1 by default; it may require manual compilation or alternative repositories.
-- The UI uses xdg portals for file dialogs (rfd). In sandboxed desktop environments (e.g., Flatpak) additional configuration may be required.
+- The UI uses GTK/libadwaita file dialogs. In sandboxed desktop environments (e.g., Flatpak), xdg-desktop-portal may still be required by the runtime.
 
 README generated/updated automatically and committed.

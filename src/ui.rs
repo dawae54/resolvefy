@@ -2,7 +2,7 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use ffmpeg_next::format::context::output;
+use libadwaita::gtk::gio;
 use libadwaita::gtk::glib::clone;
 use libadwaita::prelude::*;
 
@@ -79,7 +79,7 @@ pub fn build_ui(
             "Bitrate constante (CBR)",
         ]);
         mode_combo.set_model(Some(&mode_model));
-        mode_combo.set_property("selected", &0u32);
+        mode_combo.set_property("selected", 0u32);
 
         // Ensure window is attached to the application
         window.set_application(Some(app));
@@ -89,6 +89,8 @@ pub fn build_ui(
         pick_input_btn.connect_clicked(clone!(
             #[strong]
             state,
+            #[strong]
+            window,
             #[strong]
             input_path_label,
             #[strong]
@@ -106,61 +108,109 @@ pub fn build_ui(
             #[strong]
             status_label,
             move |_| {
-                let file = rfd::FileDialog::new()
-                    .add_filter("Vídeo", &["mp4", "mkv", "avi", "mov", "webm", "flv", "ts"])
-                    .pick_file();
+                let dialog = libadwaita::gtk::FileDialog::builder()
+                    .title("Seleccionar vídeo")
+                    .modal(true)
+                    .build();
 
-                if let Some(path) = file {
-                    let path_str = path.display().to_string();
-                    input_path_label.set_label(&path_str);
-                    input_path_label.remove_css_class("dim-label");
-
-                    match converter::detect_input(&path) {
-                        Ok(info) => {
-                            let c = container.get();
-                            let auto_out = converter::default_output_name(&path, c);
-                            let out_str = auto_out.display().to_string();
-                            output_row.set_subtitle(&out_str);
-
-                            let video_hint = if info.is_video_av1 {
-                                "→ copy"
-                            } else {
-                                "→ SVT-AV1"
-                            };
-                            let audio_hint = if info.is_audio_opus {
-                                "→ copy"
-                            } else {
-                                "→ Opus"
-                            };
-                            let info_text = format!(
-                                "Video: {} ({}) | Audio: {} ({}) | Duración: {:.1}s",
-                                info.video_codec,
-                                video_hint,
-                                info.audio_codec,
-                                audio_hint,
-                                info.duration_secs
-                            );
-                            info_label.set_label(&info_text);
-                            info_revealer.set_reveal_child(true);
-
-                            state.borrow_mut().input_path = Some(path);
-                            state.borrow_mut().output_path = Some(auto_out);
-                            state.borrow_mut().input_info = Some(info);
-                            pick_output_btn.set_sensitive(true);
-                            convert_button.set_sensitive(true);
-                        }
-                        Err(e) => {
-                            status_label.set_label(&format!("Error: {e}"));
-                            convert_button.set_sensitive(false);
-                        }
-                    }
+                let video_filter = libadwaita::gtk::FileFilter::new();
+                video_filter.set_name(Some("Vídeo"));
+                for ext in ["mp4", "mkv", "avi", "mov", "webm", "flv", "ts"] {
+                    video_filter.add_suffix(ext);
                 }
+
+                let filters = gio::ListStore::new::<libadwaita::gtk::FileFilter>();
+                filters.append(&video_filter);
+                dialog.set_filters(Some(&filters));
+                dialog.set_default_filter(Some(&video_filter));
+
+                dialog.open(
+                    Some(&window),
+                    None::<&gio::Cancellable>,
+                    clone!(
+                        #[strong]
+                        state,
+                        #[strong]
+                        input_path_label,
+                        #[strong]
+                        info_label,
+                        #[strong]
+                        info_revealer,
+                        #[strong]
+                        output_row,
+                        #[strong]
+                        pick_output_btn,
+                        #[strong]
+                        container,
+                        #[strong]
+                        convert_button,
+                        #[strong]
+                        status_label,
+                        move |result| {
+                            let file = match result {
+                                Ok(file) => file,
+                                Err(_) => return,
+                            };
+
+                            let path = match file.path() {
+                                Some(path) => path,
+                                None => return,
+                            };
+
+                            let path_str = path.display().to_string();
+                            input_path_label.set_label(&path_str);
+                            input_path_label.remove_css_class("dim-label");
+
+                            match converter::detect_input(&path) {
+                                Ok(info) => {
+                                    let c = container.get();
+                                    let auto_out = converter::default_output_name(&path, c);
+                                    let out_str = auto_out.display().to_string();
+                                    output_row.set_subtitle(&out_str);
+
+                                    let video_hint = if info.is_video_av1 {
+                                        "→ copy"
+                                    } else {
+                                        "→ SVT-AV1"
+                                    };
+                                    let audio_hint = if info.is_audio_opus {
+                                        "→ copy"
+                                    } else {
+                                        "→ Opus"
+                                    };
+                                    let info_text = format!(
+                                        "Video: {} ({}) | Audio: {} ({}) | Duración: {:.1}s",
+                                        info.video_codec,
+                                        video_hint,
+                                        info.audio_codec,
+                                        audio_hint,
+                                        info.duration_secs
+                                    );
+                                    info_label.set_label(&info_text);
+                                    info_revealer.set_reveal_child(true);
+
+                                    state.borrow_mut().input_path = Some(path);
+                                    state.borrow_mut().output_path = Some(auto_out);
+                                    state.borrow_mut().input_info = Some(info);
+                                    pick_output_btn.set_sensitive(true);
+                                    convert_button.set_sensitive(true);
+                                }
+                                Err(e) => {
+                                    status_label.set_label(&format!("Error: {e}"));
+                                    convert_button.set_sensitive(false);
+                                }
+                            }
+                        }
+                    ),
+                );
             }
         ));
 
         pick_output_btn.connect_clicked(clone!(
             #[strong]
             state,
+            #[strong]
+            window,
             #[strong]
             output_row,
             #[strong]
@@ -170,19 +220,51 @@ pub fn build_ui(
                 let ext = converter::output_extension(c);
                 let filter_name = format!("*.{ext}");
 
-                let mut dialog = rfd::FileDialog::new().add_filter(&filter_name, &[ext]);
+                let dialog = libadwaita::gtk::FileDialog::builder()
+                    .title("Guardar archivo de salida")
+                    .accept_label("Guardar")
+                    .modal(true)
+                    .build();
+
+                let output_filter = libadwaita::gtk::FileFilter::new();
+                output_filter.set_name(Some(&filter_name));
+                output_filter.add_suffix(ext);
+
+                let filters = gio::ListStore::new::<libadwaita::gtk::FileFilter>();
+                filters.append(&output_filter);
+                dialog.set_filters(Some(&filters));
+                dialog.set_default_filter(Some(&output_filter));
 
                 if let Some(ref path) = state.borrow().output_path {
-                    if let Some(dir) = path.parent() {
-                        dialog = dialog.set_directory(dir);
-                    }
+                    let initial_file = gio::File::for_path(path);
+                    dialog.set_initial_file(Some(&initial_file));
                 }
 
-                if let Some(path) = dialog.save_file() {
-                    let path_str = path.display().to_string();
-                    output_row.set_subtitle(&path_str);
-                    state.borrow_mut().output_path = Some(path);
-                }
+                dialog.save(
+                    Some(&window),
+                    None::<&gio::Cancellable>,
+                    clone!(
+                        #[strong]
+                        state,
+                        #[strong]
+                        output_row,
+                        move |result| {
+                            let file = match result {
+                                Ok(file) => file,
+                                Err(_) => return,
+                            };
+
+                            let path = match file.path() {
+                                Some(path) => path,
+                                None => return,
+                            };
+
+                            let path_str = path.display().to_string();
+                            output_row.set_subtitle(&path_str);
+                            state.borrow_mut().output_path = Some(path);
+                        }
+                    ),
+                );
             }
         ));
 
