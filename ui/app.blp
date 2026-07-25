@@ -138,12 +138,12 @@ Adw.ApplicationWindow window {
           spacing: 12;
 
           Gtk.Label progress_text_label {
-            label: "";
+            label: _("");
             styles ["dim-label"]
             xalign: 0.0;
           }
 
-          Gtk.ProgressBar progress_bar {}
+          Gtk.ProgressBar progress_bar { text: _("Progreso"); }
         }
 
         Gtk.Button convert_button {
