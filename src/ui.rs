@@ -328,11 +328,10 @@ pub fn build_ui(
                         &input_info,
                         |progress, _time| {
                             let mut ps = ps_for_progress.lock().unwrap();
+                            // progress is 0-100 from converter; store fraction 0.0-1.0
                             ps.progress = (progress / 100.0) as f32;
-                            if _time != "done" {
-                                ps.status = format!("Progreso: {}%", progress as u8);
-                            }
                         },
+
                     );
 
                     let mut ps = ps.lock().unwrap();
@@ -361,7 +360,12 @@ pub fn build_ui(
                 move || {
                     let mut ps = ps.lock().unwrap();
                     if ps.progress > 0.0 {
-                        progress_bar.set_fraction(ps.progress as f64);
+                        let frac = ps.progress as f64;
+                        progress_bar.set_fraction(frac);
+                        // show text inside the progress bar
+                        progress_bar.set_show_text(true);
+                        let percent = (frac * 100.0).round() as u8;
+                        progress_bar.set_text(&format!("{}%", percent));
                         ps.progress = 0.0;
                     }
                     if !ps.status.is_empty() {
@@ -377,6 +381,7 @@ pub fn build_ui(
                         ps.done = false;
                         status_label.set_label("Conversión completada.");
                         progress_bar.set_fraction(0.0);
+                        progress_bar.set_text("");
                         convert_button.set_sensitive(true);
                         convert_button.set_label("Convertir");
                     }
