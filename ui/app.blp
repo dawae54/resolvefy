@@ -1,0 +1,133 @@
+using Gtk 4.0;
+using Adw 1;
+
+Adw.ApplicationWindow $window {
+    title: "Resolvefy";
+    default-width: 650;
+    default-height: 650;
+
+    Adw.ToolbarView {
+        Adw.HeaderBar {}
+
+        Adw.Clamp {
+            maximum-size: 600;
+            margin-top: 12;
+            margin-bottom: 12;
+            margin-start: 12;
+            margin-end: 12;
+
+            Gtk.Box {
+                orientation: vertical;
+                spacing: 12;
+
+                Gtk.Label {
+                    label: "Resolvefy";
+                    css-classes: ["title-1"];
+                    halign: center;
+                }
+
+                Gtk.Label {
+                    label: "Conversor de vídeo a AV1";
+                    css-classes: ["dim-label"];
+                    halign: center;
+                }
+
+                Adw.PreferencesGroup {
+                    title: "Entrada";
+
+                    Adw.ActionRow {
+                        title: "Archivo de vídeo";
+                        activatable: true;
+
+                        Gtk.Button $pick_input_btn {
+                            label: "Seleccionar…";
+                            valign: center;
+                        }
+
+                        activatable-widget: $pick_input_btn;
+                    }
+
+                    Gtk.Label $input_path_label {
+                        label: "Ningún archivo seleccionado";
+                        wrap: true;
+                        xalign: 0.0;
+                        css-classes: ["dim-label"];
+                    }
+
+                    Adw.Revealer $info_revealer {
+                        transition-type: slide-down;
+
+                        Gtk.Label $info_label {
+                            wrap: true;
+                            xalign: 0.0;
+                        }
+                    }
+                }
+
+                Adw.PreferencesGroup {
+                    title: "Salida";
+
+                    Adw.ActionRow {
+                        title: "Guardar como";
+                        activatable: true;
+
+                        Gtk.Button $pick_output_btn {
+                            label: "Seleccionar…";
+                            valign: center;
+                            sensitive: false;
+                        }
+
+                        activatable-widget: $pick_output_btn;
+                    }
+
+                    Gtk.Label $output_path_label {
+                        label: "Sin ruta de salida";
+                        wrap: true;
+                        xalign: 0.0;
+                        css-classes: ["dim-label"];
+                    }
+
+                    Adw.ComboRow $container_row {
+                        title: "Contenedor";
+                    }
+                }
+
+                Adw.PreferencesGroup {
+                    title: "Codificación";
+
+                    Adw.ComboRow $mode_combo {
+                        title: "Modo de codificación";
+                        selected: 0;
+                    }
+
+                    Adw.EntryRow $crf_row {
+                        title: "Valor CRF (0–63)";
+                        text: "30";
+                    }
+
+                    Adw.EntryRow $bitrate_row {
+                        title: "Bitrate (kbps)";
+                        text: "5000";
+                        visible: false;
+                    }
+                }
+
+                Gtk.Button $convert_button {
+                    label: "Convertir";
+                    css-classes: ["suggested-action"];
+                    halign: end;
+                    sensitive: false;
+                }
+
+                Gtk.Label $status_label {
+                    label: "Preparado";
+                    wrap: true;
+                    xalign: 0.0;
+                    css-classes: ["dim-label"];
+                }
+
+                Gtk.ProgressBar $progress_bar {}
+            }
+        }
+    }
+}
