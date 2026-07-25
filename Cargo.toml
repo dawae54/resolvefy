@@ -17,3 +17,4 @@ assets = [
 ]
 [package.metadata.generate-rpm.requires]
 libadwaita = ">= 1.9"
+ffmpeg = ">= 8.1"

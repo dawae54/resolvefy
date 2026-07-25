@@ -1,60 +1,58 @@
 # Resolvefy
 
-**PROYECTO CREADO COMPLETAMENTE CON IA**
+**PROJECT CREATED ENTIRELY WITH AI**
 
-Resolvefy es un conversor de vídeo a AV1 escrito en Rust usando libadwaita. La interfaz y buena parte del código fueron generados con ayuda de inteligencia artificial.
+Resolvefy is a video-to-AV1 converter written in Rust using libadwaita. The user interface and a large portion of the code were generated with the help of artificial intelligence.
 
-Resumen rápido:
-- Interfaz: libadwaita (GTK)
-- Lógica: conversión AV1 (SVT‑AV1/Opus a través de ffmpeg)
+License: see LICENSE (GPL-3.0). Note: the "license" field in Cargo.toml may differ.
 
-Licencia: ver LICENSE (GPL-3.0). Nota: el campo "license" en Cargo.toml puede diferir.
+## Dependencies
 
-Dependencias
-------------
-Dependencias de crates (en Cargo.toml):
-- ffmpeg-next
-- gtk4
-- libadwaita
-- rfd
+- Rust toolchain (rustup, stable toolchain)
+- pkg-config, build-essential (C/C++ compilation)
+- GTK4 and libadwaita development packages — e.g., libgtk-4-dev, libadwaita-1-dev
+- gir and GObject Introspection: libgirepository1.0-dev (if required by your distribution)
+- ffmpeg (with SVT-AV1 and libopus support) installed on the system
+- xdg-desktop-portal (for native dialogs used by rfd)
 
-Dependencias de sistema (necesarias para compilar y ejecutar):
-- Rust toolchain (rustup, toolchain estable)
-- pkg-config, build-essential (compilación C/C++)
-- GTK4 y libadwaita (desarrollo) — p.ej. libgtk-4-dev, libadwaita-1-dev
-- gir y GObject introspection: libgirepository1.0-dev (si tu distro lo requiere)
-- ffmpeg (con soporte para SVT-AV1 y libopus) instalado en el sistema
-- xdg-desktop-portal (para diálogos nativos usados por rfd)
-
-Ejemplos (Debian/Ubuntu):
+Examples (Debian/Ubuntu):
 
 sudo apt update && sudo apt install -y build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgirepository1.0-dev ffmpeg xdg-desktop-portal
 
-En Fedora:
-
+On Fedora:
+```sh
 sudo dnf install -y gcc-c++ pkgconfig gtk4-devel libadwaita-devel ffmpeg xdg-desktop-portal
+```
 
-Compilar y ejecutar
---------------------
-Instalar Rust (si no está):
+## Build and run
 
+Install Rust (if not installed):
+
+```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
-Compilar en modo release:
+Build in release mode:
 
+```sh
 cargo build --release
+```
 
-Ejecutar directamente con cargo (modo desarrollo):
+Run with cargo (development):
 
+```sh
 cargo run --release
+```
 
-O ejecutar el binario compilado:
+Or run the compiled binary:
 
+```sh
 ./target/release/resolvefy
+```
 
-Notas
------
-- Asegúrate de que ffmpeg en tu sistema incluya el encoder SVT-AV1 y libopus si necesitas codificación AV1/Opus. Algunas distribuciones no incluyen SVT-AV1 por defecto; podría requerir compilación manual o repositorios alternativos.
-- La UI usa xdg portals para los diálogos de archivo (rfd). En entornos de escritorio sandboxed (Flatpak) puede requerir configuración adicional.
+## Notes
 
-README generado/actualizado automáticamente y commiteado.
+- Ensure the ffmpeg on your system includes the SVT-AV1 encoder and libopus if you need AV1/Opus encoding. Some distributions do not include SVT-AV1 by default; it may require manual compilation or alternative repositories.
+- The UI uses xdg portals for file dialogs (rfd). In sandboxed desktop environments (e.g., Flatpak) additional configuration may be required.
+
+README generated/updated automatically and committed.
