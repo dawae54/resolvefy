@@ -87,6 +87,9 @@ pub fn build_ui(
         let status_label: libadwaita::gtk::Label = builder
             .object("status_label")
             .expect("status_label");
+        let progress_text_label: libadwaita::gtk::Label = builder
+            .object("progress_text_label")
+            .expect("progress_text_label");
         let progress_bar: libadwaita::gtk::ProgressBar = builder
             .object("progress_bar")
             .expect("progress_bar");
@@ -362,11 +365,8 @@ pub fn build_ui(
                     if ps.progress > 0.0 {
                         let frac = ps.progress as f64;
                         progress_bar.set_fraction(frac);
-                        // show text inside the progress bar
-                        progress_bar.set_show_text(true);
                         let percent = (frac * 100.0).round() as u8;
-                        let txt = format!("{}%", percent);
-                        progress_bar.set_text(Some(&txt));
+                        progress_text_label.set_label(&format!("{}%", percent));
                         ps.progress = 0.0;
                     }
                     if !ps.status.is_empty() {
@@ -382,7 +382,7 @@ pub fn build_ui(
                         ps.done = false;
                         status_label.set_label("Conversión completada.");
                         progress_bar.set_fraction(0.0);
-                        progress_bar.set_text(None);
+                        progress_text_label.set_label("");
                         convert_button.set_sensitive(true);
                         convert_button.set_label("Convertir");
                     }
