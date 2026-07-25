@@ -4,7 +4,9 @@ use std::sync::{Arc, Mutex};
 
 use libadwaita::gtk::glib::clone;
 use libadwaita::prelude::*;
-use libadwaita::gtk::{Box as GtkBox, Orientation};
+
+// Include the generated UI XML produced by build.rs into the binary.
+const UI_XML: &str = include_str!(concat!(env!("OUT_DIR"), "/app.ui"));
 
 use crate::converter::{self, Container, EncodeConfig, EncodeMode};
 use crate::{ProgressState, State};
@@ -23,166 +25,73 @@ pub fn build_ui(
         let crf_value = Rc::new(Cell::new(30i32));
         let bitrate_kbps = Rc::new(Cell::new(5000i32));
 
-        let toolbar_view = libadwaita::ToolbarView::new();
-        toolbar_view.add_top_bar(&libadwaita::HeaderBar::new());
+        // Load UI from compiled blueprint XML
+        let builder = libadwaita::gtk::Builder::from_string(UI_XML);
 
-        let clamp = libadwaita::Clamp::builder()
-            .maximum_size(600)
-            .margin_top(12)
-            .margin_bottom(12)
-            .margin_start(12)
-            .margin_end(12)
-            .build();
+        let window: libadwaita::ApplicationWindow = builder
+            .object("window")
+            .expect("failed to get window from builder");
 
-        let main_box = GtkBox::new(Orientation::Vertical, 0);
-        main_box.set_spacing(12);
+        // Widgets (IDs come from ui/app.blp, without the $ prefix)
+        let pick_input_btn: libadwaita::gtk::Button = builder
+            .object("pick_input_btn")
+            .expect("pick_input_btn");
+        let input_path_label: libadwaita::gtk::Label = builder
+            .object("input_path_label")
+            .expect("input_path_label");
+        let info_label: libadwaita::gtk::Label = builder
+            .object("info_label")
+            .expect("info_label");
+        let info_revealer: libadwaita::gtk::Revealer = builder
+            .object("info_revealer")
+            .expect("info_revealer");
 
-        let title = libadwaita::gtk::Label::builder()
-            .label("Resolvefy")
-            .css_classes(["title-1"])
-            .halign(libadwaita::gtk::Align::Center)
-            .build();
-        main_box.append(&title);
+        let pick_output_btn: libadwaita::gtk::Button = builder
+            .object("pick_output_btn")
+            .expect("pick_output_btn");
+        let output_path_label: libadwaita::gtk::Label = builder
+            .object("output_path_label")
+            .expect("output_path_label");
+        let container_row: libadwaita::ComboRow = builder
+            .object("container_row")
+            .expect("container_row");
 
-        let subtitle = libadwaita::gtk::Label::builder()
-            .label("Conversor de vídeo a AV1")
-            .css_classes(["dim-label"])
-            .halign(libadwaita::gtk::Align::Center)
-            .build();
-        main_box.append(&subtitle);
+        let mode_combo: libadwaita::ComboRow = builder
+            .object("mode_combo")
+            .expect("mode_combo");
+        let crf_row: libadwaita::EntryRow = builder
+            .object("crf_row")
+            .expect("crf_row");
+        let bitrate_row: libadwaita::EntryRow = builder
+            .object("bitrate_row")
+            .expect("bitrate_row");
 
-        let input_group = libadwaita::PreferencesGroup::builder()
-            .title("Entrada")
-            .build();
+        let convert_button: libadwaita::gtk::Button = builder
+            .object("convert_button")
+            .expect("convert_button");
+        let status_label: libadwaita::gtk::Label = builder
+            .object("status_label")
+            .expect("status_label");
+        let progress_bar: libadwaita::gtk::ProgressBar = builder
+            .object("progress_bar")
+            .expect("progress_bar");
 
-        let pick_input_row = libadwaita::ActionRow::builder()
-            .title("Archivo de vídeo")
-            .activatable(true)
-            .build();
-        let pick_input_btn = libadwaita::gtk::Button::builder()
-            .label("Seleccionar…")
-            .valign(libadwaita::gtk::Align::Center)
-            .build();
-        pick_input_row.add_suffix(&pick_input_btn);
-        pick_input_row.set_activatable_widget(Some(&pick_input_btn));
-        input_group.add(&pick_input_row);
-
-        let input_path_label = libadwaita::gtk::Label::builder()
-            .label("Ningún archivo seleccionado")
-            .wrap(true)
-            .xalign(0.0)
-            .css_classes(["dim-label"])
-            .build();
-        input_group.add(&input_path_label);
-
-        let info_label = libadwaita::gtk::Label::builder()
-            .wrap(true)
-            .xalign(0.0)
-            .build();
-        let info_revealer = libadwaita::gtk::Revealer::builder()
-            .transition_type(libadwaita::gtk::RevealerTransitionType::SlideDown)
-            .build();
-        info_revealer.set_child(Some(&info_label));
-        input_group.add(&info_revealer);
-        main_box.append(&input_group);
-
-        let output_group = libadwaita::PreferencesGroup::builder()
-            .title("Salida")
-            .build();
-
-        let pick_output_row = libadwaita::ActionRow::builder()
-            .title("Guardar como")
-            .activatable(true)
-            .build();
-        let pick_output_btn = libadwaita::gtk::Button::builder()
-            .label("Seleccionar…")
-            .valign(libadwaita::gtk::Align::Center)
-            .build();
-        pick_output_btn.set_sensitive(false);
-        pick_output_row.add_suffix(&pick_output_btn);
-        pick_output_row.set_activatable_widget(Some(&pick_output_btn));
-        output_group.add(&pick_output_row);
-
-        let output_path_label = libadwaita::gtk::Label::builder()
-            .label("Sin ruta de salida")
-            .wrap(true)
-            .xalign(0.0)
-            .css_classes(["dim-label"])
-            .build();
-        output_group.add(&output_path_label);
-
-        let container_row = libadwaita::ComboRow::builder()
-            .title("Contenedor")
-            .build();
-        let model = libadwaita::gtk::StringList::new(&["MKV", "MP4"]);
-        container_row.set_model(Some(&model));
-        output_group.add(&container_row);
-        main_box.append(&output_group);
-
-        let enc_group = libadwaita::PreferencesGroup::builder()
-            .title("Codificación")
-            .build();
+        // Set models that were previously set programmatically
+        let cont_model = libadwaita::gtk::StringList::new(&["MKV", "MP4"]);
+        container_row.set_model(Some(&cont_model));
 
         let mode_model = libadwaita::gtk::StringList::new(&[
             "CRF (calidad constante)",
             "Bitrate constante (CBR)",
         ]);
+        mode_combo.set_model(Some(&mode_model));
+        mode_combo.set_property("selected", &0u32);
 
-        let mode_combo = libadwaita::ComboRow::builder()
-            .title("Modo de codificación")
-            .model(&mode_model)
-            .selected(0)
-            .build();
-
-        let crf_row = libadwaita::EntryRow::builder()
-            .title("Valor CRF (0–63)")
-            .text("30")
-            .build();
-
-        let bitrate_row = libadwaita::EntryRow::builder()
-            .title("Bitrate (kbps)")
-            .text("5000")
-            .build();
-        bitrate_row.set_visible(false);
-
-        enc_group.add(&mode_combo);
-        enc_group.add(&crf_row);
-        enc_group.add(&bitrate_row);
-        main_box.append(&enc_group);
-
-        let convert_button = libadwaita::gtk::Button::builder()
-            .label("Convertir")
-            .css_classes(["suggested-action"])
-            .halign(libadwaita::gtk::Align::End)
-            .build();
-        convert_button.set_sensitive(false);
-        main_box.append(&convert_button);
-
-        let status_label = libadwaita::gtk::Label::builder()
-            .label("Preparado")
-            .wrap(true)
-            .xalign(0.0)
-            .css_classes(["dim-label"])
-            .build();
-        main_box.append(&status_label);
-
-        let progress_bar = libadwaita::gtk::ProgressBar::builder()
-            .build();
-        main_box.append(&progress_bar);
-
-        clamp.set_child(Some(&main_box));
-        toolbar_view.set_content(Some(&clamp));
-
-        let window = libadwaita::ApplicationWindow::builder()
-            .application(app)
-            .title("Resolvefy")
-            .default_width(650)
-            .default_height(650)
-            .content(&toolbar_view)
-            .build();
-
+        // Ensure window is attached to the application
+        window.set_application(Some(app));
         window.present();
 
+        // Hook signals (logic mostly unchanged, now using widgets from the builder)
         pick_input_btn.connect_clicked(clone!(
             #[strong]
             state,
