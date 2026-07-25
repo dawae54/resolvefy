@@ -126,23 +126,16 @@ Adw.ApplicationWindow window {
           }
         }
 
-        Gtk.Label status_label {
-          label: _("Preparado");
-          wrap: true;
-          xalign: 0.0;
-          styles ["dim-label"]
-        }
-
         Gtk.ListBox progress_list {
           styles ["boxed-list"]
 
           Gtk.ListBoxRow {
             Gtk.Box {
-              orientation: horizontal;
+              orientation: vertical;
               spacing: 12;
 
-              Gtk.Label progress_text_label {
-                label: _("");
+              Gtk.Label status_label {
+                label: _("Preparado");
                 styles ["dim-label"]
                 xalign: 0.0;
               }
