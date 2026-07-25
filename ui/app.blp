@@ -130,7 +130,7 @@ Adw.ApplicationWindow window {
           label: _("Preparado");
           wrap: true;
           xalign: 0.0;
-          styles: ["dim-label"];
+          styles ["dim-label"]
         }
 
         Gtk.Box progress_row {
@@ -139,7 +139,7 @@ Adw.ApplicationWindow window {
 
           Gtk.Label progress_text_label {
             label: "";
-            styles: ["dim-label"];
+            styles ["dim-label"]
             xalign: 0.0;
           }
 
@@ -148,7 +148,7 @@ Adw.ApplicationWindow window {
 
         Gtk.Button convert_button {
           label: _("Convertir");
-          styles: ["suggested-action", "pill"];
+          styles ["suggested-action", "pill"]
           halign: center;
           sensitive: false;
         }
