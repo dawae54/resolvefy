@@ -22,13 +22,11 @@ Adw.ApplicationWindow window {
 
         Gtk.Label {
           label: _("Resolvefy");
-          styles: ["title-1"];
           halign: center;
         }
 
         Gtk.Label {
           label: _("Conversor de vídeo a AV1");
-          styles: ["dim-label"];
           halign: center;
         }
 
@@ -51,7 +49,6 @@ Adw.ApplicationWindow window {
             label: _("Ningún archivo seleccionado");
             wrap: true;
             xalign: 0.0;
-            styles: ["dim-label"];
           }
 
           Gtk.Revealer info_revealer {
@@ -84,7 +81,6 @@ Adw.ApplicationWindow window {
             label: _("Sin ruta de salida");
             wrap: true;
             xalign: 0.0;
-            styles: ["dim-label"];
           }
 
           Adw.ComboRow container_row {
@@ -114,7 +110,6 @@ Adw.ApplicationWindow window {
 
         Gtk.Button convert_button {
           label: _("Convertir");
-          styles: ["suggested-action"];
           halign: end;
           sensitive: false;
         }
@@ -123,7 +118,6 @@ Adw.ApplicationWindow window {
           label: _("Preparado");
           wrap: true;
           xalign: 0.0;
-          styles: ["dim-label"];
         }
 
         Gtk.ProgressBar progress_bar {}
