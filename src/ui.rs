@@ -32,7 +32,22 @@ pub fn build_ui(
             .object("window")
             .expect("failed to get window from builder");
 
-        // Widgets (IDs come from ui/app.blp, without the $ prefix)
+        // Grab toolbar and headerbar and ensure header is set as top bar
+        let toolbar_view: libadwaita::ToolbarView = builder
+            .object("toolbar_view")
+            .expect("toolbar_view");
+        let header_bar: libadwaita::HeaderBar = builder
+            .object("header_bar")
+            .expect("header_bar");
+        let clamp: libadwaita::Clamp = builder
+            .object("clamp")
+            .expect("clamp");
+
+        // Ensure toolbar has the header as top bar and the clamp as content
+        toolbar_view.add_top_bar(&header_bar);
+        toolbar_view.set_content(Some(&clamp));
+
+        // Widgets (IDs come from ui/app.blp)
         let pick_input_btn: libadwaita::gtk::Button = builder
             .object("pick_input_btn")
             .expect("pick_input_btn");
