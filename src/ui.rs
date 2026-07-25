@@ -2,6 +2,7 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
+use ffmpeg_next::format::context::output;
 use libadwaita::gtk::glib::clone;
 use libadwaita::prelude::*;
 
@@ -33,63 +34,41 @@ pub fn build_ui(
             .expect("failed to get window from builder");
 
         // Grab toolbar and headerbar and ensure header is set as top bar
-        let toolbar_view: libadwaita::ToolbarView = builder
-            .object("toolbar_view")
-            .expect("toolbar_view");
-        let header_bar: libadwaita::HeaderBar = builder
-            .object("header_bar")
-            .expect("header_bar");
-        let clamp: libadwaita::Clamp = builder
-            .object("clamp")
-            .expect("clamp");
+        let toolbar_view: libadwaita::ToolbarView =
+            builder.object("toolbar_view").expect("toolbar_view");
+        let header_bar: libadwaita::HeaderBar = builder.object("header_bar").expect("header_bar");
+        let clamp: libadwaita::Clamp = builder.object("clamp").expect("clamp");
 
         // Ensure toolbar has the header as top bar and the clamp as content
         toolbar_view.add_top_bar(&header_bar);
         toolbar_view.set_content(Some(&clamp));
 
         // Widgets (IDs come from ui/app.blp)
-        let pick_input_btn: libadwaita::gtk::Button = builder
-            .object("pick_input_btn")
-            .expect("pick_input_btn");
+        let pick_input_btn: libadwaita::gtk::Button =
+            builder.object("pick_input_btn").expect("pick_input_btn");
         let input_path_label: libadwaita::gtk::Label = builder
             .object("input_path_label")
             .expect("input_path_label");
-        let info_label: libadwaita::gtk::Label = builder
-            .object("info_label")
-            .expect("info_label");
-        let info_revealer: libadwaita::gtk::Revealer = builder
-            .object("info_revealer")
-            .expect("info_revealer");
+        let info_label: libadwaita::gtk::Label = builder.object("info_label").expect("info_label");
+        let info_revealer: libadwaita::gtk::Revealer =
+            builder.object("info_revealer").expect("info_revealer");
 
-        let pick_output_btn: libadwaita::gtk::Button = builder
-            .object("pick_output_btn")
-            .expect("pick_output_btn");
-        let output_path_label: libadwaita::gtk::Label = builder
-            .object("output_path_label")
-            .expect("output_path_label");
-        let container_row: libadwaita::ComboRow = builder
-            .object("container_row")
-            .expect("container_row");
+        let pick_output_btn: libadwaita::gtk::Button =
+            builder.object("pick_output_btn").expect("pick_output_btn");
+        let output_row: libadwaita::ActionRow = builder.object("output_row").expect("output_row");
+        let container_row: libadwaita::ComboRow =
+            builder.object("container_row").expect("container_row");
 
-        let mode_combo: libadwaita::ComboRow = builder
-            .object("mode_combo")
-            .expect("mode_combo");
-        let crf_row: libadwaita::EntryRow = builder
-            .object("crf_row")
-            .expect("crf_row");
-        let bitrate_row: libadwaita::EntryRow = builder
-            .object("bitrate_row")
-            .expect("bitrate_row");
+        let mode_combo: libadwaita::ComboRow = builder.object("mode_combo").expect("mode_combo");
+        let crf_row: libadwaita::EntryRow = builder.object("crf_row").expect("crf_row");
+        let bitrate_row: libadwaita::EntryRow = builder.object("bitrate_row").expect("bitrate_row");
 
-        let convert_button: libadwaita::gtk::Button = builder
-            .object("convert_button")
-            .expect("convert_button");
-        let status_label: libadwaita::gtk::Label = builder
-            .object("status_label")
-            .expect("status_label");
-        let progress_bar: libadwaita::gtk::ProgressBar = builder
-            .object("progress_bar")
-            .expect("progress_bar");
+        let convert_button: libadwaita::gtk::Button =
+            builder.object("convert_button").expect("convert_button");
+        let status_label: libadwaita::gtk::Label =
+            builder.object("status_label").expect("status_label");
+        let progress_bar: libadwaita::gtk::ProgressBar =
+            builder.object("progress_bar").expect("progress_bar");
 
         // Set models that were previously set programmatically
         let cont_model = libadwaita::gtk::StringList::new(&["MKV", "MP4"]);
@@ -117,7 +96,7 @@ pub fn build_ui(
             #[strong]
             info_revealer,
             #[strong]
-            output_path_label,
+            output_row,
             #[strong]
             pick_output_btn,
             #[strong]
@@ -128,10 +107,7 @@ pub fn build_ui(
             status_label,
             move |_| {
                 let file = rfd::FileDialog::new()
-                    .add_filter(
-                        "Vídeo",
-                        &["mp4", "mkv", "avi", "mov", "webm", "flv", "ts"],
-                    )
+                    .add_filter("Vídeo", &["mp4", "mkv", "avi", "mov", "webm", "flv", "ts"])
                     .pick_file();
 
                 if let Some(path) = file {
@@ -142,16 +118,20 @@ pub fn build_ui(
                     match converter::detect_input(&path) {
                         Ok(info) => {
                             let c = container.get();
-                            let auto_out =
-                                converter::default_output_name(&path, c);
+                            let auto_out = converter::default_output_name(&path, c);
                             let out_str = auto_out.display().to_string();
-                            output_path_label.set_label(&out_str);
-                            output_path_label.remove_css_class("dim-label");
+                            output_row.set_subtitle(&out_str);
 
-                            let video_hint =
-                                if info.is_video_av1 { "→ copy" } else { "→ SVT-AV1" };
-                            let audio_hint =
-                                if info.is_audio_opus { "→ copy" } else { "→ Opus" };
+                            let video_hint = if info.is_video_av1 {
+                                "→ copy"
+                            } else {
+                                "→ SVT-AV1"
+                            };
+                            let audio_hint = if info.is_audio_opus {
+                                "→ copy"
+                            } else {
+                                "→ Opus"
+                            };
                             let info_text = format!(
                                 "Video: {} ({}) | Audio: {} ({}) | Duración: {:.1}s",
                                 info.video_codec,
@@ -182,7 +162,7 @@ pub fn build_ui(
             #[strong]
             state,
             #[strong]
-            output_path_label,
+            output_row,
             #[strong]
             container,
             move |_| {
@@ -190,8 +170,7 @@ pub fn build_ui(
                 let ext = converter::output_extension(c);
                 let filter_name = format!("*.{ext}");
 
-                let mut dialog =
-                    rfd::FileDialog::new().add_filter(&filter_name, &[ext]);
+                let mut dialog = rfd::FileDialog::new().add_filter(&filter_name, &[ext]);
 
                 if let Some(ref path) = state.borrow().output_path {
                     if let Some(dir) = path.parent() {
@@ -201,8 +180,7 @@ pub fn build_ui(
 
                 if let Some(path) = dialog.save_file() {
                     let path_str = path.display().to_string();
-                    output_path_label.set_label(&path_str);
-                    output_path_label.remove_css_class("dim-label");
+                    output_row.set_subtitle(&path_str);
                     state.borrow_mut().output_path = Some(path);
                 }
             }
@@ -212,7 +190,7 @@ pub fn build_ui(
             #[strong]
             state,
             #[strong]
-            output_path_label,
+            output_row,
             #[strong]
             container,
             move |row| {
@@ -225,11 +203,9 @@ pub fn build_ui(
 
                 let input_path = state.borrow().input_path.clone();
                 if let Some(ref path) = input_path {
-                    let auto_out =
-                        converter::default_output_name(path, c);
+                    let auto_out = converter::default_output_name(path, c);
                     let out_str = auto_out.display().to_string();
-                    output_path_label.set_label(&out_str);
-                    output_path_label.remove_css_class("dim-label");
+                    output_row.set_subtitle(&out_str);
                     state.borrow_mut().output_path = Some(auto_out);
                 }
             }
@@ -255,25 +231,28 @@ pub fn build_ui(
             }
         ));
 
-        mode_combo.connect_notify_local(Some("selected"), clone!(
-            #[strong]
-            encode_mode,
-            #[strong]
-            crf_row,
-            #[strong]
-            bitrate_row,
-            move |combo, _pspec| {
-                let selected = combo.property::<u32>("selected");
-                let mode = if selected == 0 {
-                    EncodeMode::CRF
-                } else {
-                    EncodeMode::CBR
-                };
-                encode_mode.set(mode);
-                crf_row.set_visible(matches!(mode, EncodeMode::CRF));
-                bitrate_row.set_visible(matches!(mode, EncodeMode::CBR));
-            }
-        ));
+        mode_combo.connect_notify_local(
+            Some("selected"),
+            clone!(
+                #[strong]
+                encode_mode,
+                #[strong]
+                crf_row,
+                #[strong]
+                bitrate_row,
+                move |combo, _pspec| {
+                    let selected = combo.property::<u32>("selected");
+                    let mode = if selected == 0 {
+                        EncodeMode::CRF
+                    } else {
+                        EncodeMode::CBR
+                    };
+                    encode_mode.set(mode);
+                    crf_row.set_visible(matches!(mode, EncodeMode::CRF));
+                    bitrate_row.set_visible(matches!(mode, EncodeMode::CBR));
+                }
+            ),
+        );
 
         convert_button.connect_clicked(clone!(
             #[strong]
@@ -331,7 +310,6 @@ pub fn build_ui(
                             // progress is 0-100 from converter; store fraction 0.0-1.0
                             ps.progress = (progress / 100.0) as f32;
                         },
-
                     );
 
                     let mut ps = ps.lock().unwrap();

@@ -78,9 +78,11 @@ Adw.ApplicationWindow window {
         Adw.PreferencesGroup {
           title: _("Salida");
 
-          Adw.ActionRow {
+          Adw.ActionRow output_row {
             title: _("Guardar como");
+            subtitle: _("Sin ruta de salida");
             activatable: true;
+            // styles ["property"]
 
             Gtk.Button pick_output_btn {
               label: _("Seleccionar…");
@@ -91,15 +93,7 @@ Adw.ApplicationWindow window {
             activatable-widget: pick_output_btn;
           }
 
-          Gtk.Label output_path_label {
-            label: _("Sin ruta de salida");
-            wrap: true;
-            xalign: 0.0;
 
-            styles [
-              "dim-label",
-            ]
-          }
 
           Adw.ComboRow container_row {
             title: _("Contenedor");
@@ -126,28 +120,25 @@ Adw.ApplicationWindow window {
           }
         }
 
-        Gtk.ListBox progress_list {
-          styles ["boxed-list"]
+        Gtk.Label status_label {
+          label: _("Preparado");
 
-          Gtk.ListBoxRow {
-            Gtk.Box {
-              orientation: vertical;
-              spacing: 12;
 
-              Gtk.Label status_label {
-                label: _("Preparado");
-                styles ["dim-label"]
-                xalign: 0.0;
-              }
+          xalign: 0.0;
+        }
 
-              Gtk.ProgressBar progress_bar { text: _("Progreso"); }
-            }
-          }
+        Gtk.ProgressBar progress_bar {
+          text: _("Progreso");
         }
 
         Gtk.Button convert_button {
           label: _("Convertir");
-          styles ["suggested-action", "pill"]
+
+          styles [
+            "suggested-action",
+            "pill",
+          ]
+
           halign: center;
           sensitive: false;
         }
