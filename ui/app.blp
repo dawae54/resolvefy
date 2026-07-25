@@ -133,17 +133,23 @@ Adw.ApplicationWindow window {
           styles ["dim-label"]
         }
 
-        Gtk.Box progress_row {
-          orientation: horizontal;
-          spacing: 12;
+        Gtk.ListBox progress_list {
+          styles ["boxed-list"]
 
-          Gtk.Label progress_text_label {
-            label: _("");
-            styles ["dim-label"]
-            xalign: 0.0;
+          Gtk.ListBoxRow {
+            Gtk.Box {
+              orientation: horizontal;
+              spacing: 12;
+
+              Gtk.Label progress_text_label {
+                label: _("");
+                styles ["dim-label"]
+                xalign: 0.0;
+              }
+
+              Gtk.ProgressBar progress_bar { text: _("Progreso"); }
+            }
           }
-
-          Gtk.ProgressBar progress_bar { text: _("Progreso"); }
         }
 
         Gtk.Button convert_button {
