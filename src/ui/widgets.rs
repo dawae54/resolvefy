@@ -8,14 +8,16 @@ use libadwaita::prelude::*;
 use crate::app::{AppState, ProgressState};
 use crate::converter::{self, Container, EncodeConfig, EncodeMode};
 
-use super::dialogs;
+use super::dialogs::{self, InputWidgets};
 
 fn update_output_path(state: &Rc<RefCell<AppState>>, output_row: &libadwaita::ActionRow, container: Container) {
-    state.borrow().input_path.as_ref().map(|path| {
-        let auto_out = converter::default_output_name(path, container);
-        output_row.set_subtitle(&auto_out.display().to_string());
-        state.borrow_mut().output_path = Some(auto_out);
+    let auto_out = state.borrow().input_path.as_ref().map(|path| {
+        converter::default_output_name(path, container)
     });
+    if let Some(out) = auto_out {
+        output_row.set_subtitle(&out.display().to_string());
+        state.borrow_mut().output_path = Some(out);
+    }
 }
 
 pub fn setup_container_row(
@@ -83,7 +85,9 @@ pub fn setup_crf_row(crf_row: &libadwaita::EntryRow, crf_value: &Rc<Cell<i32>>) 
         #[strong]
         crf_value,
         move |entry| {
-            entry.text().to_string().parse::<i32>().ok().map(|v| crf_value.set(v.clamp(0, 63)));
+            if let Ok(v) = entry.text().to_string().parse::<i32>() {
+                crf_value.set(v.clamp(0, 63));
+            }
         }
     ));
 }
@@ -96,7 +100,9 @@ pub fn setup_bitrate_row(
         #[strong]
         bitrate_kbps,
         move |entry| {
-            entry.text().to_string().parse::<i32>().ok().map(|v| bitrate_kbps.set(v.max(100)));
+            if let Ok(v) = entry.text().to_string().parse::<i32>() {
+                bitrate_kbps.set(v.max(100));
+            }
         }
     ));
 }
@@ -104,16 +110,18 @@ pub fn setup_bitrate_row(
 pub fn setup_pick_input_btn(
     pick_input_btn: &libadwaita::gtk::Button,
     window: &libadwaita::ApplicationWindow,
-    state: &Rc<RefCell<AppState>>,
-    input_path_label: &libadwaita::gtk::Label,
-    info_label: &libadwaita::gtk::Label,
-    info_revealer: &libadwaita::gtk::Revealer,
-    output_row: &libadwaita::ActionRow,
-    pick_output_btn: &libadwaita::gtk::Button,
+    w: &InputWidgets<'_>,
     container: Container,
-    convert_button: &libadwaita::gtk::Button,
-    status_label: &libadwaita::gtk::Label,
 ) {
+    let state = w.state;
+    let input_path_label = w.input_path_label;
+    let info_label = w.info_label;
+    let info_revealer = w.info_revealer;
+    let output_row = w.output_row;
+    let pick_output_btn = w.pick_output_btn;
+    let convert_button = w.convert_button;
+    let status_label = w.status_label;
+
     pick_input_btn.connect_clicked(clone!(
         #[strong]
         state,
@@ -134,11 +142,17 @@ pub fn setup_pick_input_btn(
         #[strong]
         status_label,
         move |_| {
-            dialogs::open_input_dialog(
-                &window, &state, &input_path_label, &info_label,
-                &info_revealer, &output_row, &pick_output_btn,
-                container, &convert_button, &status_label,
-            );
+            let w = InputWidgets {
+                state: &state,
+                input_path_label: &input_path_label,
+                info_label: &info_label,
+                info_revealer: &info_revealer,
+                output_row: &output_row,
+                pick_output_btn: &pick_output_btn,
+                convert_button: &convert_button,
+                status_label: &status_label,
+            };
+            dialogs::open_input_dialog(&window, &w, container);
         }
     ));
 }
@@ -271,11 +285,11 @@ pub fn setup_progress_timer(
                     ps.status.clear();
                 }
 
-                ps.error.take().map(|err| {
+                if let Some(err) = ps.error.take() {
                     status_label.set_label(&format!("Error: {err}"));
                     convert_button.set_sensitive(false);
                     convert_button.set_label("Convertir");
-                });
+                }
 
                 if ps.done {
                     ps.done = false;

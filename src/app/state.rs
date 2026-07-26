@@ -9,6 +9,7 @@ pub struct ProgressState {
     pub error: Option<String>,
 }
 
+#[derive(Default)]
 pub struct AppState {
     pub input_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
@@ -22,16 +23,6 @@ impl Default for ProgressState {
             status: String::new(),
             done: false,
             error: None,
-        }
-    }
-}
-
-impl Default for AppState {
-    fn default() -> Self {
-        Self {
-            input_path: None,
-            output_path: None,
-            input_info: None,
         }
     }
 }

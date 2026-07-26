@@ -9,12 +9,14 @@ pub use convert::convert;
 pub use detect::detect_input;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum EncodeMode {
     CRF,
     CBR,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Container {
     MKV,
     MP4,

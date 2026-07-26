@@ -77,15 +77,17 @@ pub fn build_ui(
         widgets::setup_pick_input_btn(
             &pick_input_btn,
             &window,
-            &state,
-            &input_path_label,
-            &info_label,
-            &info_revealer,
-            &output_row,
-            &pick_output_btn,
+            &dialogs::InputWidgets {
+                state: &state,
+                input_path_label: &input_path_label,
+                info_label: &info_label,
+                info_revealer: &info_revealer,
+                output_row: &output_row,
+                pick_output_btn: &pick_output_btn,
+                convert_button: &convert_button,
+                status_label: &status_label,
+            },
             container.get(),
-            &convert_button,
-            &status_label,
         );
 
         widgets::setup_pick_output_btn(

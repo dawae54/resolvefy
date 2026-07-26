@@ -78,12 +78,12 @@ impl VideoTranscoder {
         let mut frame = ffmpeg::frame::Video::empty();
 
         while self.decoder.receive_frame(&mut frame).is_ok() {
-            if total_duration > 0.0 {
-                if let Some(pts) = frame.timestamp() {
-                    let current = pts as f64 * f64::from(self.input_time_base);
-                    let pct = (current / total_duration * 100.0).min(100.0);
-                    progress_cb(pct, super::format_duration(current));
-                }
+            if total_duration > 0.0
+                && let Some(pts) = frame.timestamp()
+            {
+                let current = pts as f64 * f64::from(self.input_time_base);
+                let pct = (current / total_duration * 100.0).min(100.0);
+                progress_cb(pct, super::format_duration(current));
             }
             let pts = frame.timestamp();
             frame.set_pts(pts);

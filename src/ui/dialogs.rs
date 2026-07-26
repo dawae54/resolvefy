@@ -8,6 +8,17 @@ use libadwaita::prelude::*;
 use crate::app::AppState;
 use crate::converter::{self, Container};
 
+pub struct InputWidgets<'a> {
+    pub state: &'a Rc<RefCell<AppState>>,
+    pub input_path_label: &'a libadwaita::gtk::Label,
+    pub info_label: &'a libadwaita::gtk::Label,
+    pub info_revealer: &'a libadwaita::gtk::Revealer,
+    pub output_row: &'a libadwaita::ActionRow,
+    pub pick_output_btn: &'a libadwaita::gtk::Button,
+    pub convert_button: &'a libadwaita::gtk::Button,
+    pub status_label: &'a libadwaita::gtk::Label,
+}
+
 pub fn create_file_filter_video() -> libadwaita::gtk::FileFilter {
     let filter = libadwaita::gtk::FileFilter::new();
     filter.set_name(Some("Vídeo"));
@@ -27,28 +38,21 @@ pub fn create_file_filter_output(container: Container) -> libadwaita::gtk::FileF
 
 fn handle_input_file_selection(
     file: &gio::File,
-    state: &Rc<RefCell<AppState>>,
-    input_path_label: &libadwaita::gtk::Label,
-    info_label: &libadwaita::gtk::Label,
-    info_revealer: &libadwaita::gtk::Revealer,
-    output_row: &libadwaita::ActionRow,
-    pick_output_btn: &libadwaita::gtk::Button,
+    w: &InputWidgets<'_>,
     container: Container,
-    convert_button: &libadwaita::gtk::Button,
-    status_label: &libadwaita::gtk::Label,
 ) {
     let path = match file.path() {
         Some(path) => path,
         None => return,
     };
 
-    input_path_label.set_label(&path.display().to_string());
-    input_path_label.remove_css_class("dim-label");
+    w.input_path_label.set_label(&path.display().to_string());
+    w.input_path_label.remove_css_class("dim-label");
 
     match converter::detect_input(&path) {
         Ok(info) => {
             let auto_out = converter::default_output_name(&path, container);
-            output_row.set_subtitle(&auto_out.display().to_string());
+            w.output_row.set_subtitle(&auto_out.display().to_string());
 
             let video_hint = if info.is_video_av1 { "→ copy" } else { "→ SVT-AV1" };
             let audio_hint = if info.is_audio_opus { "→ copy" } else { "→ Opus" };
@@ -57,20 +61,20 @@ fn handle_input_file_selection(
                 info.video_codec, video_hint, info.audio_codec, audio_hint, info.duration_secs
             );
 
-            info_label.set_label(&info_text);
-            info_revealer.set_reveal_child(true);
+            w.info_label.set_label(&info_text);
+            w.info_revealer.set_reveal_child(true);
 
-            let mut state_mut = state.borrow_mut();
+            let mut state_mut = w.state.borrow_mut();
             state_mut.input_path = Some(path);
             state_mut.output_path = Some(auto_out);
             state_mut.input_info = Some(info);
 
-            pick_output_btn.set_sensitive(true);
-            convert_button.set_sensitive(true);
+            w.pick_output_btn.set_sensitive(true);
+            w.convert_button.set_sensitive(true);
         }
         Err(e) => {
-            status_label.set_label(&format!("Error: {e}"));
-            convert_button.set_sensitive(false);
+            w.status_label.set_label(&format!("Error: {e}"));
+            w.convert_button.set_sensitive(false);
         }
     }
 }
@@ -91,15 +95,8 @@ fn handle_output_file_selection(
 
 pub fn open_input_dialog(
     window: &libadwaita::ApplicationWindow,
-    state: &Rc<RefCell<AppState>>,
-    input_path_label: &libadwaita::gtk::Label,
-    info_label: &libadwaita::gtk::Label,
-    info_revealer: &libadwaita::gtk::Revealer,
-    output_row: &libadwaita::ActionRow,
-    pick_output_btn: &libadwaita::gtk::Button,
+    w: &InputWidgets<'_>,
     container: Container,
-    convert_button: &libadwaita::gtk::Button,
-    status_label: &libadwaita::gtk::Label,
 ) {
     let video_filter = create_file_filter_video();
     let filters = gio::ListStore::new::<libadwaita::gtk::FileFilter>();
@@ -112,6 +109,15 @@ pub fn open_input_dialog(
 
     dialog.set_filters(Some(&filters));
     dialog.set_default_filter(Some(&video_filter));
+
+    let state = w.state;
+    let input_path_label = w.input_path_label;
+    let info_label = w.info_label;
+    let info_revealer = w.info_revealer;
+    let output_row = w.output_row;
+    let pick_output_btn = w.pick_output_btn;
+    let convert_button = w.convert_button;
+    let status_label = w.status_label;
 
     dialog.open(
         Some(window),
@@ -134,13 +140,19 @@ pub fn open_input_dialog(
             #[strong]
             status_label,
             move |result| {
-                result.ok().map(|file| {
-                    handle_input_file_selection(
-                        &file, &state, &input_path_label, &info_label,
-                        &info_revealer, &output_row, &pick_output_btn,
-                        container, &convert_button, &status_label,
-                    );
-                });
+                if let Ok(file) = result {
+                    let w = InputWidgets {
+                        state: &state,
+                        input_path_label: &input_path_label,
+                        info_label: &info_label,
+                        info_revealer: &info_revealer,
+                        output_row: &output_row,
+                        pick_output_btn: &pick_output_btn,
+                        convert_button: &convert_button,
+                        status_label: &status_label,
+                    };
+                    handle_input_file_selection(&file, &w, container);
+                }
             }
         ),
     );
@@ -165,9 +177,9 @@ pub fn open_output_dialog(
     dialog.set_filters(Some(&filters));
     dialog.set_default_filter(Some(&output_filter));
 
-    state.borrow().output_path.as_ref().map(|path| {
+    if let Some(path) = state.borrow().output_path.as_ref() {
         dialog.set_initial_file(Some(&gio::File::for_path(path)));
-    });
+    }
 
     dialog.save(
         Some(window),
@@ -178,9 +190,9 @@ pub fn open_output_dialog(
             #[strong]
             output_row,
             move |result| {
-                result.ok().map(|file| {
+                if let Ok(file) = result {
                     handle_output_file_selection(&file, &state, &output_row);
-                });
+                }
             }
         ),
     );
