@@ -36,10 +36,9 @@ pub struct EncodeConfig {
 }
 
 pub fn format_duration(secs: f64) -> String {
-    let h = secs as u64 / 3600;
-    let m = (secs as u64 % 3600) / 60;
-    let s = secs as u64 % 60;
-    format!("{h:02}:{m:02}:{s:02}")
+    let (hours, remaining) = ((secs as u64) / 3600, (secs as u64) % 3600);
+    let (minutes, seconds) = (remaining / 60, remaining % 60);
+    format!("{hours:02}:{minutes:02}:{seconds:02}")
 }
 
 pub fn output_extension(container: Container) -> &'static str {

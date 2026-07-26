@@ -10,14 +10,21 @@ use crate::converter::{self, Container, EncodeConfig, EncodeMode};
 
 use super::dialogs;
 
+fn update_output_path(state: &Rc<RefCell<AppState>>, output_row: &libadwaita::ActionRow, container: Container) {
+    state.borrow().input_path.as_ref().map(|path| {
+        let auto_out = converter::default_output_name(path, container);
+        output_row.set_subtitle(&auto_out.display().to_string());
+        state.borrow_mut().output_path = Some(auto_out);
+    });
+}
+
 pub fn setup_container_row(
     container_row: &libadwaita::ComboRow,
     state: &Rc<RefCell<AppState>>,
     output_row: &libadwaita::ActionRow,
     container: &Rc<Cell<Container>>,
 ) {
-    let cont_model = libadwaita::gtk::StringList::new(&["MKV", "MP4"]);
-    container_row.set_model(Some(&cont_model));
+    container_row.set_model(Some(&libadwaita::gtk::StringList::new(&["MKV", "MP4"])));
 
     container_row.connect_selected_notify(clone!(
         #[strong]
@@ -27,20 +34,11 @@ pub fn setup_container_row(
         #[strong]
         container,
         move |row| {
-            let c = match row.selected() {
-                0 => Container::MKV,
-                1 => Container::MP4,
-                _ => return,
-            };
-            container.set(c);
-
-            let input_path = state.borrow().input_path.clone();
-            if let Some(ref path) = input_path {
-                let auto_out = converter::default_output_name(path, c);
-                let out_str = auto_out.display().to_string();
-                output_row.set_subtitle(&out_str);
-                state.borrow_mut().output_path = Some(auto_out);
-            }
+            matches!(row.selected(), 0 | 1).then(|| {
+                let c = if row.selected() == 0 { Container::MKV } else { Container::MP4 };
+                container.set(c);
+                update_output_path(&state, &output_row, c);
+            });
         }
     ));
 }
@@ -51,11 +49,10 @@ pub fn setup_mode_combo(
     crf_row: &libadwaita::EntryRow,
     bitrate_row: &libadwaita::EntryRow,
 ) {
-    let mode_model = libadwaita::gtk::StringList::new(&[
+    mode_combo.set_model(Some(&libadwaita::gtk::StringList::new(&[
         "CRF (calidad constante)",
         "Bitrate constante (CBR)",
-    ]);
-    mode_combo.set_model(Some(&mode_model));
+    ])));
     mode_combo.set_property("selected", 0u32);
 
     mode_combo.connect_notify_local(
@@ -68,8 +65,7 @@ pub fn setup_mode_combo(
             #[strong]
             bitrate_row,
             move |combo, _pspec| {
-                let selected = combo.property::<u32>("selected");
-                let mode = if selected == 0 {
+                let mode = if combo.property::<u32>("selected") == 0 {
                     EncodeMode::CRF
                 } else {
                     EncodeMode::CBR
@@ -87,9 +83,7 @@ pub fn setup_crf_row(crf_row: &libadwaita::EntryRow, crf_value: &Rc<Cell<i32>>) 
         #[strong]
         crf_value,
         move |entry| {
-            if let Ok(v) = entry.text().to_string().parse::<i32>() {
-                crf_value.set(v.clamp(0, 63));
-            }
+            entry.text().to_string().parse::<i32>().ok().map(|v| crf_value.set(v.clamp(0, 63)));
         }
     ));
 }
@@ -102,9 +96,7 @@ pub fn setup_bitrate_row(
         #[strong]
         bitrate_kbps,
         move |entry| {
-            if let Ok(v) = entry.text().to_string().parse::<i32>() {
-                bitrate_kbps.set(v.max(100));
-            }
+            entry.text().to_string().parse::<i32>().ok().map(|v| bitrate_kbps.set(v.max(100)));
         }
     ));
 }
@@ -143,16 +135,9 @@ pub fn setup_pick_input_btn(
         status_label,
         move |_| {
             dialogs::open_input_dialog(
-                &window,
-                &state,
-                &input_path_label,
-                &info_label,
-                &info_revealer,
-                &output_row,
-                &pick_output_btn,
-                container,
-                &convert_button,
-                &status_label,
+                &window, &state, &input_path_label, &info_label,
+                &info_revealer, &output_row, &pick_output_btn,
+                container, &convert_button, &status_label,
             );
         }
     ));
@@ -176,6 +161,36 @@ pub fn setup_pick_output_btn(
             dialogs::open_output_dialog(&window, &state, &output_row, container);
         }
     ));
+}
+
+fn build_encode_config(encode_mode: &Rc<Cell<EncodeMode>>, crf_value: &Rc<Cell<i32>>, bitrate_kbps: &Rc<Cell<i32>>) -> EncodeConfig {
+    EncodeConfig {
+        mode: encode_mode.get(),
+        crf_value: crf_value.get() as u32,
+        bitrate_kbps: bitrate_kbps.get() as u32,
+    }
+}
+
+fn spawn_conversion(
+    input: std::path::PathBuf,
+    output: std::path::PathBuf,
+    config: EncodeConfig,
+    input_info: crate::converter::InputInfo,
+    progress_state: Arc<Mutex<ProgressState>>,
+) {
+    let ps = progress_state.clone();
+    std::thread::spawn(move || {
+        let ps_for_progress = ps.clone();
+        let result = converter::convert(input, output, config, &input_info, |progress, _time| {
+            ps_for_progress.lock().unwrap().progress = (progress / 100.0) as f32;
+        });
+
+        let mut ps = ps.lock().unwrap();
+        match result {
+            Ok(()) => { ps.done = true; }
+            Err(e) => { ps.error = Some(e); }
+        }
+    });
 }
 
 pub fn setup_convert_button(
@@ -203,57 +218,24 @@ pub fn setup_convert_button(
         #[strong]
         progress_state,
         move |_| {
-            let state_ref = state.borrow();
-
-            let input = match state_ref.input_path {
-                Some(ref p) => p.clone(),
-                None => return,
-            };
-            let output = match state_ref.output_path {
-                Some(ref p) => p.clone(),
-                None => return,
-            };
-            let input_info = match state_ref.input_info {
-                Some(ref i) => i.clone(),
-                None => return,
+            let (input, output, input_info) = {
+                let state_ref = state.borrow();
+                let input = state_ref.input_path.clone();
+                let output = state_ref.output_path.clone();
+                let input_info = state_ref.input_info.clone();
+                match (input, output, input_info) {
+                    (Some(i), Some(o), Some(info)) => (i, o, info),
+                    _ => return,
+                }
             };
 
-            let config = EncodeConfig {
-                mode: encode_mode.get(),
-                crf_value: crf_value.get() as u32,
-                bitrate_kbps: bitrate_kbps.get() as u32,
-            };
-
-            drop(state_ref);
+            let config = build_encode_config(&encode_mode, &crf_value, &bitrate_kbps);
 
             convert_button.set_sensitive(false);
             convert_button.set_label("Convirtiendo…");
             status_label.set_label("Iniciando conversión...");
 
-            let ps = progress_state.clone();
-            std::thread::spawn(move || {
-                let ps_for_progress = ps.clone();
-                let result = converter::convert(
-                    input,
-                    output,
-                    config,
-                    &input_info,
-                    |progress, _time| {
-                        let mut ps = ps_for_progress.lock().unwrap();
-                        ps.progress = (progress / 100.0) as f32;
-                    },
-                );
-
-                let mut ps = ps.lock().unwrap();
-                match result {
-                    Ok(()) => {
-                        ps.done = true;
-                    }
-                    Err(e) => {
-                        ps.error = Some(e);
-                    }
-                }
-            });
+            spawn_conversion(input, output, config, input_info, progress_state.clone());
         }
     ));
 }
@@ -276,30 +258,33 @@ pub fn setup_progress_timer(
             progress_bar,
             move || {
                 let mut ps = ps.lock().unwrap();
+
                 if ps.progress > 0.0 {
                     let frac = ps.progress as f64;
                     progress_bar.set_fraction(frac);
-                    let percent = (frac * 100.0).round() as u8;
-                    status_label.set_label(&format!("{}%", percent));
+                    status_label.set_label(&format!("{}%", (frac * 100.0).round() as u8));
                     ps.progress = 0.0;
                 }
+
                 if !ps.status.is_empty() {
                     status_label.set_label(&ps.status);
                     ps.status.clear();
                 }
-                if let Some(err) = ps.error.take() {
+
+                ps.error.take().map(|err| {
                     status_label.set_label(&format!("Error: {err}"));
                     convert_button.set_sensitive(false);
                     convert_button.set_label("Convertir");
-                }
+                });
+
                 if ps.done {
                     ps.done = false;
-                    status_label.set_label("Conversión completada.");
                     progress_bar.set_fraction(0.0);
                     status_label.set_label("Preparado");
                     convert_button.set_sensitive(true);
                     convert_button.set_label("Convertir");
                 }
+
                 libadwaita::gtk::glib::ControlFlow::Continue
             }
         ),
