@@ -25,7 +25,7 @@ fn main() {
     }
 
     // Verify file was written
-    if !fs::metadata(&out_ui).is_ok() {
+    if fs::metadata(&out_ui).is_err() {
         panic!("Blueprint compiler did not produce {}, build cannot continue", out_ui);
     }
 

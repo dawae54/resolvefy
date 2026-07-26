@@ -80,13 +80,13 @@ pub fn setup_mode_combo(
     );
 }
 
-pub fn setup_crf_row(crf_row: &libadwaita::EntryRow, crf_value: &Rc<Cell<i32>>) {
+pub fn setup_crf_row(crf_row: &libadwaita::EntryRow, crf_value: &Rc<Cell<u32>>) {
     crf_row.connect_activate(clone!(
         #[strong]
         crf_value,
         move |entry| {
             if let Ok(v) = entry.text().to_string().parse::<i32>() {
-                crf_value.set(v.clamp(0, 63));
+                crf_value.set((v.clamp(0, 63)) as u32);
             }
         }
     ));
@@ -94,13 +94,13 @@ pub fn setup_crf_row(crf_row: &libadwaita::EntryRow, crf_value: &Rc<Cell<i32>>) 
 
 pub fn setup_bitrate_row(
     bitrate_row: &libadwaita::EntryRow,
-    bitrate_kbps: &Rc<Cell<i32>>,
+    bitrate_kbps: &Rc<Cell<u32>>,
 ) {
     bitrate_row.connect_activate(clone!(
         #[strong]
         bitrate_kbps,
         move |entry| {
-            if let Ok(v) = entry.text().to_string().parse::<i32>() {
+            if let Ok(v) = entry.text().to_string().parse::<u32>() {
                 bitrate_kbps.set(v.max(100));
             }
         }
@@ -177,11 +177,11 @@ pub fn setup_pick_output_btn(
     ));
 }
 
-fn build_encode_config(encode_mode: &Rc<Cell<EncodeMode>>, crf_value: &Rc<Cell<i32>>, bitrate_kbps: &Rc<Cell<i32>>) -> EncodeConfig {
+fn build_encode_config(encode_mode: &Rc<Cell<EncodeMode>>, crf_value: &Rc<Cell<u32>>, bitrate_kbps: &Rc<Cell<u32>>) -> EncodeConfig {
     EncodeConfig {
         mode: encode_mode.get(),
-        crf_value: crf_value.get() as u32,
-        bitrate_kbps: bitrate_kbps.get() as u32,
+        crf_value: crf_value.get(),
+        bitrate_kbps: bitrate_kbps.get(),
     }
 }
 
@@ -196,10 +196,10 @@ fn spawn_conversion(
     std::thread::spawn(move || {
         let ps_for_progress = ps.clone();
         let result = converter::convert(input, output, config, &input_info, |progress, _time| {
-            ps_for_progress.lock().unwrap().progress = (progress / 100.0) as f32;
+            ps_for_progress.lock().unwrap_or_else(|e| e.into_inner()).progress = progress / 100.0;
         });
 
-        let mut ps = ps.lock().unwrap();
+        let mut ps = ps.lock().unwrap_or_else(|e| e.into_inner());
         match result {
             Ok(()) => { ps.done = true; }
             Err(e) => { ps.error = Some(e); }
@@ -211,8 +211,8 @@ pub fn setup_convert_button(
     convert_button: &libadwaita::gtk::Button,
     state: &Rc<RefCell<AppState>>,
     encode_mode: &Rc<Cell<EncodeMode>>,
-    crf_value: &Rc<Cell<i32>>,
-    bitrate_kbps: &Rc<Cell<i32>>,
+    crf_value: &Rc<Cell<u32>>,
+    bitrate_kbps: &Rc<Cell<u32>>,
     status_label: &libadwaita::gtk::Label,
     progress_state: &Arc<Mutex<ProgressState>>,
 ) {
@@ -271,12 +271,11 @@ pub fn setup_progress_timer(
             #[strong]
             progress_bar,
             move || {
-                let mut ps = ps.lock().unwrap();
+                let mut ps = ps.lock().unwrap_or_else(|e| e.into_inner());
 
                 if ps.progress > 0.0 {
-                    let frac = ps.progress as f64;
-                    progress_bar.set_fraction(frac);
-                    status_label.set_label(&format!("{}%", (frac * 100.0).round() as u8));
+                    progress_bar.set_fraction(ps.progress);
+                    status_label.set_label(&format!("{}%", (ps.progress * 100.0).round() as u8));
                     ps.progress = 0.0;
                 }
 

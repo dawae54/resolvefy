@@ -74,7 +74,7 @@ impl VideoTranscoder {
         octx: &mut ffmpeg::format::context::Output,
         progress_cb: &dyn Fn(f64, String),
         total_duration: f64,
-    ) {
+    ) -> Result<(), String> {
         let mut frame = ffmpeg::frame::Video::empty();
 
         while self.decoder.receive_frame(&mut frame).is_ok() {
@@ -88,12 +88,15 @@ impl VideoTranscoder {
             let pts = frame.timestamp();
             frame.set_pts(pts);
             frame.set_kind(ffmpeg::picture::Type::None);
-            let _ = self.encoder.send_frame(&frame);
-            self.flush_encoder(octx);
+            self.encoder
+                .send_frame(&frame)
+                .map_err(|e| format!("video send_frame: {e}"))?;
+            self.flush_encoder(octx)?;
         }
+        Ok(())
     }
 
-    fn flush_encoder(&mut self, octx: &mut ffmpeg::format::context::Output) {
+    fn flush_encoder(&mut self, octx: &mut ffmpeg::format::context::Output) -> Result<(), String> {
         let out_tb = octx
             .stream(self.ost_index)
             .map(|s| s.time_base())
@@ -102,21 +105,31 @@ impl VideoTranscoder {
         while self.encoder.receive_packet(&mut encoded).is_ok() {
             encoded.set_stream(self.ost_index);
             encoded.rescale_ts(self.input_time_base, out_tb);
-            let _ = encoded.write_interleaved(octx);
+            encoded
+                .write_interleaved(octx)
+                .map_err(|e| format!("video write: {e}"))?;
         }
+        Ok(())
     }
 
-    pub fn flush(&mut self, octx: &mut ffmpeg::format::context::Output) {
-        let _ = self.decoder.send_eof();
+    pub fn flush(&mut self, octx: &mut ffmpeg::format::context::Output) -> Result<(), String> {
+        self.decoder
+            .send_eof()
+            .map_err(|e| format!("video decoder flush: {e}"))?;
         let mut frame = ffmpeg::frame::Video::empty();
         while self.decoder.receive_frame(&mut frame).is_ok() {
             let pts = frame.timestamp();
             frame.set_pts(pts);
             frame.set_kind(ffmpeg::picture::Type::None);
-            let _ = self.encoder.send_frame(&frame);
-            self.flush_encoder(octx);
+            self.encoder
+                .send_frame(&frame)
+                .map_err(|e| format!("video flush send_frame: {e}"))?;
+            self.flush_encoder(octx)?;
         }
-        let _ = self.encoder.send_eof();
-        self.flush_encoder(octx);
+        self.encoder
+            .send_eof()
+            .map_err(|e| format!("video encoder flush: {e}"))?;
+        self.flush_encoder(octx)?;
+        Ok(())
     }
 }

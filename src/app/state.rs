@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use crate::converter::InputInfo;
 
 pub struct ProgressState {
-    pub progress: f32,
+    pub progress: f64,
     pub status: String,
     pub done: bool,
     pub error: Option<String>,

@@ -58,18 +58,21 @@ impl AudioTranscoder {
         let _ = self.decoder.send_packet(packet);
     }
 
-    pub fn receive_and_write(&mut self, octx: &mut ffmpeg::format::context::Output) {
+    pub fn receive_and_write(&mut self, octx: &mut ffmpeg::format::context::Output) -> Result<(), String> {
         let mut frame = ffmpeg::frame::Audio::empty();
 
         while self.decoder.receive_frame(&mut frame).is_ok() {
             let pts = frame.timestamp();
             frame.set_pts(pts);
-            let _ = self.encoder.send_frame(&frame);
-            self.flush_encoder(octx);
+            self.encoder
+                .send_frame(&frame)
+                .map_err(|e| format!("audio send_frame: {e}"))?;
+            self.flush_encoder(octx)?;
         }
+        Ok(())
     }
 
-    fn flush_encoder(&mut self, octx: &mut ffmpeg::format::context::Output) {
+    fn flush_encoder(&mut self, octx: &mut ffmpeg::format::context::Output) -> Result<(), String> {
         let out_tb = octx
             .stream(self.ost_index)
             .map(|s| s.time_base())
@@ -78,20 +81,30 @@ impl AudioTranscoder {
         while self.encoder.receive_packet(&mut encoded).is_ok() {
             encoded.set_stream(self.ost_index);
             encoded.rescale_ts(self.input_time_base, out_tb);
-            let _ = encoded.write_interleaved(octx);
+            encoded
+                .write_interleaved(octx)
+                .map_err(|e| format!("audio write: {e}"))?;
         }
+        Ok(())
     }
 
-    pub fn flush(&mut self, octx: &mut ffmpeg::format::context::Output) {
-        let _ = self.decoder.send_eof();
+    pub fn flush(&mut self, octx: &mut ffmpeg::format::context::Output) -> Result<(), String> {
+        self.decoder
+            .send_eof()
+            .map_err(|e| format!("audio decoder flush: {e}"))?;
         let mut frame = ffmpeg::frame::Audio::empty();
         while self.decoder.receive_frame(&mut frame).is_ok() {
             let pts = frame.timestamp();
             frame.set_pts(pts);
-            let _ = self.encoder.send_frame(&frame);
-            self.flush_encoder(octx);
+            self.encoder
+                .send_frame(&frame)
+                .map_err(|e| format!("audio flush send_frame: {e}"))?;
+            self.flush_encoder(octx)?;
         }
-        let _ = self.encoder.send_eof();
-        self.flush_encoder(octx);
+        self.encoder
+            .send_eof()
+            .map_err(|e| format!("audio encoder flush: {e}"))?;
+        self.flush_encoder(octx)?;
+        Ok(())
     }
 }

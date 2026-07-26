@@ -7,7 +7,7 @@ use super::audio::AudioTranscoder;
 use super::video::VideoTranscoder;
 
 struct StreamMapping {
-    mapping: Vec<isize>,
+    mapping: Vec<Option<usize>>,
     video_transcoder: Option<VideoTranscoder>,
     audio_transcoder: Option<AudioTranscoder>,
 }
@@ -33,7 +33,7 @@ fn process_stream(
     ist: &ffmpeg::format::stream::Stream,
     ost_index: usize,
     config: &EncodeConfig,
-    stream_mapping: &mut [isize],
+    stream_mapping: &mut [Option<usize>],
 ) -> Result<(Option<VideoTranscoder>, Option<AudioTranscoder>), String> {
     let medium = ist.parameters().medium();
     let codec_id = ist.parameters().id();
@@ -42,29 +42,29 @@ fn process_stream(
         ffmpeg::media::Type::Video => {
             if codec_id == ffmpeg::codec::Id::AV1 {
                 setup_passthrough_stream(octx, ist)?;
-                stream_mapping[ist_index] = ost_index as isize;
+                stream_mapping[ist_index] = Some(ost_index);
                 Ok((None, None))
             } else {
                 let transcoder = VideoTranscoder::new(ist, octx, ost_index, config)
                     .map_err(|e| format!("init video transcoder: {e}"))?;
-                stream_mapping[ist_index] = ost_index as isize;
+                stream_mapping[ist_index] = Some(ost_index);
                 Ok((Some(transcoder), None))
             }
         }
         ffmpeg::media::Type::Audio => {
             if codec_id == ffmpeg::codec::Id::OPUS {
                 setup_passthrough_stream(octx, ist)?;
-                stream_mapping[ist_index] = ost_index as isize;
+                stream_mapping[ist_index] = Some(ost_index);
                 Ok((None, None))
             } else {
                 let transcoder = AudioTranscoder::new(ist, octx, ost_index)
                     .map_err(|e| format!("init audio transcoder: {e}"))?;
-                stream_mapping[ist_index] = ost_index as isize;
+                stream_mapping[ist_index] = Some(ost_index);
                 Ok((None, Some(transcoder)))
             }
         }
         _ => {
-            stream_mapping[ist_index] = -1;
+            stream_mapping[ist_index] = None;
             Ok((None, None))
         }
     }
@@ -76,7 +76,7 @@ fn initialize_stream_mapping(
     config: &EncodeConfig,
 ) -> Result<StreamMapping, String> {
     let nb_streams = ictx.nb_streams() as usize;
-    let mut mapping = vec![-1; nb_streams];
+    let mut mapping = vec![None; nb_streams];
     let mut ost_index = 0;
     let mut video_transcoder = None;
     let mut audio_transcoder = None;
@@ -106,7 +106,7 @@ fn initialize_stream_mapping(
 struct PacketContext<'a> {
     stream: &'a ffmpeg::format::stream::Stream<'a>,
     packet: &'a ffmpeg::Packet,
-    stream_mapping: &'a [isize],
+    stream_mapping: &'a [Option<usize>],
     video_transcoder: &'a mut Option<VideoTranscoder>,
     audio_transcoder: &'a mut Option<AudioTranscoder>,
     octx: &'a mut ffmpeg::format::context::Output,
@@ -114,13 +114,11 @@ struct PacketContext<'a> {
     total_duration: f64,
 }
 
-fn process_packet(ctx: &mut PacketContext<'_>) {
+fn process_packet(ctx: &mut PacketContext<'_>) -> Result<(), String> {
     let ist_index = ctx.stream.index();
-    let ost_index_val = ctx.stream_mapping[ist_index];
-
-    if ost_index_val < 0 {
-        return;
-    }
+    let Some(ost_index) = ctx.stream_mapping[ist_index] else {
+        return Ok(());
+    };
 
     let medium = ctx.stream.parameters().medium();
     let tb = f64::from(ctx.stream.time_base());
@@ -130,13 +128,13 @@ fn process_packet(ctx: &mut PacketContext<'_>) {
         ffmpeg::media::Type::Video if ctx.video_transcoder.is_some() => {
             if let Some(vt) = ctx.video_transcoder {
                 vt.send_packet(ctx.packet);
-                vt.receive_and_write(ctx.octx, ctx.progress_cb, ctx.total_duration);
+                vt.receive_and_write(ctx.octx, ctx.progress_cb, ctx.total_duration)?;
             }
         }
         ffmpeg::media::Type::Audio if ctx.audio_transcoder.is_some() => {
             if let Some(at) = ctx.audio_transcoder {
                 at.send_packet(ctx.packet);
-                at.receive_and_write(ctx.octx);
+                at.receive_and_write(ctx.octx)?;
             }
         }
         _ => {
@@ -144,13 +142,14 @@ fn process_packet(ctx: &mut PacketContext<'_>) {
             let in_tb = ctx.stream.time_base();
             let out_tb = ctx
                 .octx
-                .stream(ost_index_val as usize)
+                .stream(ost_index)
                 .map(|s| s.time_base())
                 .unwrap_or(ffmpeg::Rational(1, 90000));
             pkt.rescale_ts(in_tb, out_tb);
             pkt.set_position(-1);
-            pkt.set_stream(ost_index_val as usize);
-            let _ = pkt.write_interleaved(ctx.octx);
+            pkt.set_stream(ost_index);
+            pkt.write_interleaved(ctx.octx)
+                .map_err(|e| format!("write packet: {e}"))?;
         }
     }
 
@@ -161,19 +160,22 @@ fn process_packet(ctx: &mut PacketContext<'_>) {
         let pct = (current / ctx.total_duration * 100.0).min(100.0);
         (ctx.progress_cb)(pct, super::format_duration(current));
     }
+
+    Ok(())
 }
 
 fn flush_transcoders(
     video_transcoder: &mut Option<VideoTranscoder>,
     audio_transcoder: &mut Option<AudioTranscoder>,
     octx: &mut ffmpeg::format::context::Output,
-) {
+) -> Result<(), String> {
     if let Some(vt) = video_transcoder {
-        vt.flush(octx);
+        vt.flush(octx)?;
     }
     if let Some(at) = audio_transcoder {
-        at.flush(octx);
+        at.flush(octx)?;
     }
+    Ok(())
 }
 
 pub fn convert(
@@ -209,10 +211,10 @@ pub fn convert(
             octx: &mut octx,
             progress_cb: &progress_cb,
             total_duration,
-        });
+        })?;
     }
 
-    flush_transcoders(&mut video_transcoder, &mut audio_transcoder, &mut octx);
+    flush_transcoders(&mut video_transcoder, &mut audio_transcoder, &mut octx)?;
 
     octx.write_trailer().map_err(|e| format!("write trailer: {e}"))?;
 

@@ -23,8 +23,8 @@ pub fn build_ui(
     app.connect_activate(move |app| {
         let encode_mode = Rc::new(Cell::new(EncodeMode::CRF));
         let container = Rc::new(Cell::new(Container::MKV));
-        let crf_value = Rc::new(Cell::new(30i32));
-        let bitrate_kbps = Rc::new(Cell::new(5000i32));
+        let crf_value = Rc::new(Cell::new(30u32));
+        let bitrate_kbps = Rc::new(Cell::new(5000u32));
 
         let builder = libadwaita::gtk::Builder::from_string(UI_XML);
 
