@@ -4422,19 +4422,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "resolvefy-core"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "695ffc23c83d873914ffc3e119a0c983e71a7b61facf9da6cf5ac7cb4ea02b2b"
+dependencies = [
+ "ffmpeg-next",
+]
+
+[[package]]
 name = "resolvefy-gtk"
 version = "1.0.0"
 dependencies = [
  "gtk4",
  "libadwaita",
- "resolvefy-core",
+ "resolvefy-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "resolvefy-slint"
 version = "1.0.0"
 dependencies = [
- "resolvefy-core",
+ "resolvefy-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rfd",
  "slint",
  "slint-build",
