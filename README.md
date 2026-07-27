@@ -2,9 +2,17 @@
 
 **PROJECT CREATED ENTIRELY WITH AI**
 
-Resolvefy lets you convert a video (and its audio) to a codec compatible with Davinci Resolve on Linux, using ffmpeg.
+Resolvefy lets you convert a video (and its audio) to a codec compatible with DaVinci Resolve on Linux, using ffmpeg.
+
+Output files are saved as MP4 with a `_resolve` suffix (e.g., `video_resolve.mp4`).
 
 License: see LICENSE (GPL-3.0).
+
+## Crates
+
+- `resolvefy-core` — Core conversion logic
+- `resolvefy-slint` — Slint UI
+- `resolvefy-gtk` — GTK4/libadwaita UI
 
 ## Dependencies
 
@@ -16,9 +24,12 @@ License: see LICENSE (GPL-3.0).
 
 Examples (Debian/Ubuntu):
 
+```sh
 sudo apt update && sudo apt install -y build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgirepository1.0-dev ffmpeg xdg-desktop-portal
+```
 
 On Fedora:
+
 ```sh
 sudo dnf install -y gcc-c++ pkgconfig gtk4-devel libadwaita-devel ffmpeg xdg-desktop-portal
 ```
@@ -37,21 +48,20 @@ Build in release mode:
 cargo build --release
 ```
 
-Run with cargo (development):
+Run the GTK UI:
 
 ```sh
-cargo run --release
+cargo run --release -p resolvefy-gtk
 ```
 
-Or run the compiled binary:
+Run the Slint UI:
 
 ```sh
-./target/release/resolvefy
+cargo run --release -p resolvefy-slint
 ```
 
 ## Notes
 
+- Encoding options (CRF/CBR mode, values) are in an advanced collapsible section.
 - Ensure the ffmpeg on your system includes the SVT-AV1 encoder and libopus if you need AV1/Opus encoding. Some distributions do not include SVT-AV1 by default; it may require manual compilation or alternative repositories.
-- The UI uses GTK/libadwaita file dialogs. In sandboxed desktop environments (e.g., Flatpak), xdg-desktop-portal may still be required by the runtime.
-
-README generated/updated automatically and committed.
+- The GTK UI uses libadwaita file dialogs. In sandboxed desktop environments (e.g., Flatpak), xdg-desktop-portal may still be required by the runtime.
