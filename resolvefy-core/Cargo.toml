@@ -10,4 +10,5 @@ keywords = ["ffmpeg", "davinci-resolve", "video", "av1", "transcode"]
 categories = ["multimedia::video"]
 
 [dependencies]
-ffmpeg-next = "8.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
