@@ -6,7 +6,7 @@ use libadwaita::gtk::glib::clone;
 use libadwaita::prelude::*;
 
 use resolvefy_core::AppState;
-use resolvefy_core::converter::{self, Container};
+use resolvefy_core::converter;
 
 pub struct InputWidgets<'a> {
     pub state: &'a Rc<RefCell<AppState>>,
@@ -28,18 +28,16 @@ pub fn create_file_filter_video() -> libadwaita::gtk::FileFilter {
     filter
 }
 
-pub fn create_file_filter_output(container: Container) -> libadwaita::gtk::FileFilter {
-    let ext = converter::output_extension(container);
+pub fn create_file_filter_output() -> libadwaita::gtk::FileFilter {
     let filter = libadwaita::gtk::FileFilter::new();
-    filter.set_name(Some(&format!("*.{ext}")));
-    filter.add_suffix(ext);
+    filter.set_name(Some(&format!("*.{}", converter::OUTPUT_EXTENSION)));
+    filter.add_suffix(converter::OUTPUT_EXTENSION);
     filter
 }
 
 fn handle_input_file_selection(
     file: &gio::File,
     w: &InputWidgets<'_>,
-    container: Container,
 ) {
     let path = match file.path() {
         Some(path) => path,
@@ -51,7 +49,7 @@ fn handle_input_file_selection(
 
     match converter::detect_input(&path) {
         Ok(info) => {
-            let auto_out = converter::default_output_name(&path, container);
+            let auto_out = converter::default_output_name(&path);
             w.output_row.set_subtitle(&auto_out.display().to_string());
 
             let video_hint = if info.is_video_av1 { "→ copy" } else { "→ SVT-AV1" };
@@ -96,7 +94,6 @@ fn handle_output_file_selection(
 pub fn open_input_dialog(
     window: &libadwaita::ApplicationWindow,
     w: &InputWidgets<'_>,
-    container: Container,
 ) {
     let video_filter = create_file_filter_video();
     let filters = gio::ListStore::new::<libadwaita::gtk::FileFilter>();
@@ -151,7 +148,7 @@ pub fn open_input_dialog(
                         convert_button: &convert_button,
                         status_label: &status_label,
                     };
-                    handle_input_file_selection(&file, &w, container);
+                    handle_input_file_selection(&file, &w);
                 }
             }
         ),
@@ -162,9 +159,8 @@ pub fn open_output_dialog(
     window: &libadwaita::ApplicationWindow,
     state: &Rc<RefCell<AppState>>,
     output_row: &libadwaita::ActionRow,
-    container: Container,
 ) {
-    let output_filter = create_file_filter_output(container);
+    let output_filter = create_file_filter_output();
     let filters = gio::ListStore::new::<libadwaita::gtk::FileFilter>();
     filters.append(&output_filter);
 

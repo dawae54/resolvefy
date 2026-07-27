@@ -10,41 +10,6 @@ use resolvefy_core::converter::{self, EncodeConfig, EncodeMode};
 
 use super::dialogs::{self, InputWidgets};
 
-fn update_output_path(state: &Rc<RefCell<AppState>>, output_row: &libadwaita::ActionRow) {
-    let auto_out = {
-        let s = state.borrow();
-        s.input_path.as_ref().map(|path| {
-            converter::default_output_name(path, s.container)
-        })
-    };
-    if let Some(out) = auto_out {
-        output_row.set_subtitle(&out.display().to_string());
-        state.borrow_mut().output_path = Some(out);
-    }
-}
-
-pub fn setup_container_row(
-    container_row: &libadwaita::ComboRow,
-    state: &Rc<RefCell<AppState>>,
-    output_row: &libadwaita::ActionRow,
-) {
-    container_row.set_model(Some(&libadwaita::gtk::StringList::new(&["MKV", "MP4"])));
-
-    container_row.connect_selected_notify(clone!(
-        #[strong]
-        state,
-        #[strong]
-        output_row,
-        move |row| {
-            matches!(row.selected(), 0 | 1).then(|| {
-                let c = if row.selected() == 0 { converter::Container::MKV } else { converter::Container::MP4 };
-                state.borrow_mut().container = c;
-                update_output_path(&state, &output_row);
-            });
-        }
-    ));
-}
-
 pub fn setup_mode_combo(
     mode_combo: &libadwaita::ComboRow,
     state: &Rc<RefCell<AppState>>,
@@ -141,7 +106,6 @@ pub fn setup_pick_input_btn(
         #[strong]
         status_label,
         move |_| {
-            let container = state.borrow().container;
             let w = InputWidgets {
                 state: &state,
                 input_path_label: &input_path_label,
@@ -152,7 +116,7 @@ pub fn setup_pick_input_btn(
                 convert_button: &convert_button,
                 status_label: &status_label,
             };
-            dialogs::open_input_dialog(&window, &w, container);
+            dialogs::open_input_dialog(&window, &w);
         }
     ));
 }
@@ -171,8 +135,7 @@ pub fn setup_pick_output_btn(
         #[strong]
         output_row,
         move |_| {
-            let container = state.borrow().container;
-            dialogs::open_output_dialog(&window, &state, &output_row, container);
+            dialogs::open_output_dialog(&window, &state, &output_row);
         }
     ));
 }

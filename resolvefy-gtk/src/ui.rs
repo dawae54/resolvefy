@@ -50,9 +50,6 @@ pub fn build_ui() -> libadwaita::Application {
         let pick_output_btn: libadwaita::gtk::Button =
             builder.object("pick_output_btn").expect("pick_output_btn");
         let output_row: libadwaita::ActionRow = builder.object("output_row").expect("output_row");
-        let container_row: libadwaita::ComboRow =
-            builder.object("container_row").expect("container_row");
-
         let mode_combo: libadwaita::ComboRow = builder.object("mode_combo").expect("mode_combo");
         let crf_row: libadwaita::EntryRow = builder.object("crf_row").expect("crf_row");
         let bitrate_row: libadwaita::EntryRow = builder.object("bitrate_row").expect("bitrate_row");
@@ -67,7 +64,6 @@ pub fn build_ui() -> libadwaita::Application {
         window.set_application(Some(app));
         window.present();
 
-        widgets::setup_container_row(&container_row, &state, &output_row);
         widgets::setup_mode_combo(&mode_combo, &state, &crf_row, &bitrate_row);
         widgets::setup_crf_row(&crf_row, &crf_value);
         widgets::setup_bitrate_row(&bitrate_row, &bitrate_kbps);

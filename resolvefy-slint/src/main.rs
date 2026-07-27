@@ -3,22 +3,9 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use resolvefy_core::{AppState, ProgressState};
-use resolvefy_core::converter::{self, Container, EncodeConfig, EncodeMode};
+use resolvefy_core::converter::{self, EncodeConfig, EncodeMode};
 
 slint::include_modules!();
-
-fn update_output_path(state: &Rc<RefCell<AppState>>, window: &MainWindow) {
-    let auto_out = {
-        let s = state.borrow();
-        s.input_path.as_ref().map(|path| {
-            converter::default_output_name(path, s.container)
-        })
-    };
-    if let Some(out) = auto_out {
-        window.set_output_path(out.display().to_string().into());
-        state.borrow_mut().output_path = Some(out);
-    }
-}
 
 fn parse_crf(text: &str) -> u32 {
     text.parse::<i32>().map(|v| v.clamp(1, 63) as u32).unwrap_or(24)
@@ -48,7 +35,7 @@ fn main() {
             match converter::detect_input(&path) {
                 Ok(info) => {
                     let mut s = state.borrow_mut();
-                    let auto_out = converter::default_output_name(&path, s.container);
+                    let auto_out = converter::default_output_name(&path);
                     window.set_output_path(auto_out.display().to_string().into());
 
                     let video_hint = if info.is_video_av1 { "→ copy" } else { "→ SVT-AV1" };
@@ -81,7 +68,7 @@ fn main() {
         let window_weak = window.as_weak();
         window.on_pick_output(move || {
             let Some(window) = window_weak.upgrade() else { return };
-            let ext = converter::output_extension(state.borrow().container);
+            let ext = converter::OUTPUT_EXTENSION;
             let dialog = rfd::FileDialog::new()
                 .add_filter(format!(".{ext}"), &[ext])
                 .set_title("Guardar archivo de salida");
@@ -107,16 +94,6 @@ fn main() {
             let mode = if index == 1 { EncodeMode::CBR } else { EncodeMode::CRF };
             state.borrow_mut().encode_mode = mode;
             window.set_bitrate_visible(index == 1);
-        });
-    }
-
-    {
-        let state = state.clone();
-        let window_weak = window.as_weak();
-        window.on_container_changed(move |index| {
-            let Some(window) = window_weak.upgrade() else { return };
-            state.borrow_mut().container = if index == 0 { Container::MKV } else { Container::MP4 };
-            update_output_path(&state, &window);
         });
     }
 

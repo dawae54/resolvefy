@@ -17,7 +17,6 @@ export component MainWindow inherits Window {
     callback pick-output();
     callback convert-clicked();
     callback mode-changed(int);
-    callback container-changed(int);
 
     in-out property <string> input-path: "Ningún archivo seleccionado";
     in-out property <string> info-text: "";
@@ -83,20 +82,6 @@ export component MainWindow inherits Window {
                     }
                 }
 
-                HorizontalBox {
-                    Text {
-                        text: "Contenedor:";
-                        vertical-alignment: center;
-                    }
-
-                    container-combo := ComboBox {
-                        model: ["MKV", "MP4"];
-                        current-index: 0;
-                        selected => {
-                            root.container-changed(self.current-index);
-                        }
-                    }
-                }
             }
         }
 
