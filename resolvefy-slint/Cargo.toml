@@ -10,7 +10,7 @@ keywords = ["ffmpeg", "davinci-resolve", "video", "slint", "av1"]
 categories = ["multimedia::video", "gui"]
 
 [dependencies]
-resolvefy-core = {path = "../resolvefy-core"}
+resolvefy-core = "1.0.0"
 slint = "1.9"
 rfd = "0.15"
 
