@@ -98,20 +98,25 @@ Adw.ApplicationWindow window {
         Adw.PreferencesGroup {
           title: _("Codificación");
 
-          Adw.ComboRow mode_combo {
-            title: _("Modo de codificación");
-            selected: 0;
-          }
+          Adw.ExpanderRow encoding_expander {
+            title: _("Opciones avanzadas");
+            subtitle: _("Modo CRF, bitrate, etc.");
 
-          Adw.EntryRow crf_row {
-            title: _("Valor CRF (1–63)");
-            text: _("24");
-          }
+            Adw.ComboRow mode_combo {
+              title: _("Modo de codificación");
+              selected: 0;
+            }
 
-          Adw.EntryRow bitrate_row {
-            title: _("Bitrate (kbps)");
-            text: _("5000");
-            visible: false;
+            Adw.EntryRow crf_row {
+              title: _("Valor CRF (1–63)");
+              text: _("24");
+            }
+
+            Adw.EntryRow bitrate_row {
+              title: _("Bitrate (kbps)");
+              text: _("5000");
+              visible: false;
+            }
           }
         }
 

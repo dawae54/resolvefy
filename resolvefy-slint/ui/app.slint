@@ -6,6 +6,7 @@ import {
     VerticalBox,
     HorizontalBox,
     GroupBox,
+    CheckBox,
 } from "std-widgets.slint";
 
 export component MainWindow inherits Window {
@@ -27,6 +28,7 @@ export component MainWindow inherits Window {
     in-out property <bool> output-enabled: false;
     in-out property <bool> convert-enabled: false;
     in-out property <string> convert-label: "Convertir";
+    in-out property <bool> advanced-visible: false;
     in-out property <bool> bitrate-visible: false;
     in-out property <string> crf-text: "24";
     in-out property <string> bitrate-text: "5000";
@@ -88,26 +90,40 @@ export component MainWindow inherits Window {
         GroupBox {
             title: "Codificación";
             VerticalBox {
-                mode-combo := ComboBox {
-                    model: ["CRF (calidad constante)", "Bitrate constante (CBR)"];
-                    current-index: 0;
-                    selected => {
-                        root.mode-changed(self.current-index);
+                CheckBox {
+                    text: "Opciones avanzadas";
+                    toggled => {
+                        root.advanced-visible = self.checked;
                     }
                 }
 
-                if !root.bitrate-visible: LineEdit {
-                    text: root.crf-text;
-                    placeholder-text: "Valor CRF (1–63)";
-                    edited => {
-                        root.crf-text = self.text;
+                if root.advanced-visible: VerticalBox {
+                    spacing: 8px;
+
+                    mode-combo := ComboBox {
+                        model: ["CRF (calidad constante)", "Bitrate constante (CBR)"];
+                        current-index: 0;
+                        height: 30px;
+                        selected => {
+                            root.mode-changed(self.current-index);
+                        }
                     }
-                }
-                if root.bitrate-visible: LineEdit {
-                    text: root.bitrate-text;
-                    placeholder-text: "Bitrate (kbps)";
-                    edited => {
-                        root.bitrate-text = self.text;
+
+                    if !root.bitrate-visible: LineEdit {
+                        text: root.crf-text;
+                        placeholder-text: "Valor CRF (1–63)";
+                        height: 30px;
+                        edited => {
+                            root.crf-text = self.text;
+                        }
+                    }
+                    if root.bitrate-visible: LineEdit {
+                        text: root.bitrate-text;
+                        placeholder-text: "Bitrate (kbps)";
+                        height: 30px;
+                        edited => {
+                            root.bitrate-text = self.text;
+                        }
                     }
                 }
             }
