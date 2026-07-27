@@ -1,9 +1,13 @@
 [package]
 name = "resolvefy-slint"
 version = "1.0.0"
-edition = "2024"
-license = "GPL-3.0-or-later"
-description = "Convert video files to be compatible with DaVinci Resolve (Slint)"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Convert video files to be compatible with DaVinci Resolve (Slint UI)"
+keywords = ["ffmpeg", "davinci-resolve", "video", "slint", "av1"]
+categories = ["multimedia::video", "gui"]
 
 [dependencies]
 resolvefy-core = {path = "../resolvefy-core"}
@@ -22,11 +26,13 @@ priority = "optional"
 depends = "ffmpeg (>= 7.0)"
 assets = [
   ["target/release/resolvefy-slint", "usr/bin/resolvefy-slint", "755"],
+  ["ui/resolvefy-slint.desktop", "usr/share/applications/resolvefy-slint.desktop", "644"],
 ]
 
 [package.metadata.generate-rpm]
 assets = [
   {source = "target/release/resolvefy-slint", dest = "/usr/bin/resolvefy-slint", mode = "755"},
+  {source = "ui/resolvefy-slint.desktop", dest = "/usr/share/applications/resolvefy-slint.desktop", mode = "644"},
 ]
 
 [package.metadata.generate-rpm.requires]

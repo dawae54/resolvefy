@@ -4416,14 +4416,14 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "resolvefy-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "ffmpeg-next",
 ]
 
 [[package]]
 name = "resolvefy-gtk"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "gtk4",
  "libadwaita",
@@ -4432,7 +4432,7 @@ dependencies = [
 
 [[package]]
 name = "resolvefy-slint"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "resolvefy-core",
  "rfd",

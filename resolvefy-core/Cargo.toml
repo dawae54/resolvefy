@@ -1,8 +1,13 @@
 [package]
 name = "resolvefy-core"
 version = "1.0.0"
-edition = "2024"
-license = "GPL-3.0-or-later"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Core library for Resolvefy: video conversion for DaVinci Resolve compatibility"
+keywords = ["ffmpeg", "davinci-resolve", "video", "av1", "transcode"]
+categories = ["multimedia::video"]
 
 [dependencies]
 ffmpeg-next = "8.1"

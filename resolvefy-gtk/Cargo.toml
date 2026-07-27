@@ -1,9 +1,13 @@
 [package]
 name = "resolvefy-gtk"
 version = "1.0.0"
-edition = "2024"
-license = "GPL-3.0-or-later"
-description = "Convert video files to be compatible with DaVinci Resolve (GTK)"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Convert video files to be compatible with DaVinci Resolve (GTK4/libadwaita UI)"
+keywords = ["ffmpeg", "davinci-resolve", "video", "gtk", "av1"]
+categories = ["multimedia::video", "gui"]
 
 [dependencies]
 resolvefy-core = {path = "../resolvefy-core"}
@@ -19,11 +23,13 @@ priority = "optional"
 depends = "ffmpeg (>= 7.0), libadwaita-1-0 (>= 1.4)"
 assets = [
   ["target/release/resolvefy-gtk", "usr/bin/resolvefy-gtk", "755"],
+  ["ui/resolvefy-gtk.desktop", "usr/share/applications/resolvefy-gtk.desktop", "644"],
 ]
 
 [package.metadata.generate-rpm]
 assets = [
   {source = "target/release/resolvefy-gtk", dest = "/usr/bin/resolvefy-gtk", mode = "755"},
+  {source = "ui/resolvefy-gtk.desktop", dest = "/usr/share/applications/resolvefy-gtk.desktop", mode = "644"},
 ]
 
 [package.metadata.generate-rpm.requires]

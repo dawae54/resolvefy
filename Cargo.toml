@@ -1,3 +1,9 @@
 [workspace]
 members = ["resolvefy-core", "resolvefy-gtk", "resolvefy-slint"]
 resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/dawae54/resolvefy"
+homepage = "https://github.com/dawae54/resolvefy"
