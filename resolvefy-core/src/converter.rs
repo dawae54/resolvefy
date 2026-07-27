@@ -16,13 +16,7 @@ pub enum EncodeMode {
     CBR,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::upper_case_acronyms)]
-pub enum Container {
-    #[default]
-    MKV,
-    MP4,
-}
+pub const OUTPUT_EXTENSION: &str = "mp4";
 
 #[derive(Debug, Clone)]
 pub struct InputInfo {
@@ -45,15 +39,7 @@ pub fn format_duration(secs: f64) -> String {
     format!("{hours:02}:{minutes:02}:{seconds:02}")
 }
 
-pub fn output_extension(container: Container) -> &'static str {
-    match container {
-        Container::MKV => "mkv",
-        Container::MP4 => "mp4",
-    }
-}
-
-pub fn default_output_name(input: &Path, container: Container) -> PathBuf {
+pub fn default_output_name(input: &Path) -> PathBuf {
     let stem = input.file_stem().unwrap_or_default().to_string_lossy();
-    let ext = output_extension(container);
-    input.with_file_name(format!("{stem}.{ext}"))
+    input.with_file_name(format!("{stem}_resolve.{OUTPUT_EXTENSION}"))
 }
