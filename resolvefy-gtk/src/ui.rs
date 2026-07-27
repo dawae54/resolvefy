@@ -7,25 +7,23 @@ use std::sync::{Arc, Mutex};
 
 use libadwaita::prelude::*;
 
-use crate::app::{AppState, ProgressState};
-use crate::converter::{Container, EncodeMode};
+use resolvefy_core::{AppState, ProgressState};
+use resolvefy_core::converter::EncodeMode;
 
 const UI_XML: &str = include_str!(concat!(env!("OUT_DIR"), "/app.ui"));
 
-pub fn build_ui(
-    state: Rc<RefCell<AppState>>,
-    progress_state: Arc<Mutex<ProgressState>>,
-) -> libadwaita::Application {
+pub fn build_ui() -> libadwaita::Application {
+    let state = Rc::new(RefCell::new(AppState::default()));
+    let progress_state = Arc::new(Mutex::new(ProgressState::default()));
+    let encode_mode = Rc::new(Cell::new(EncodeMode::CRF));
+    let crf_value = Rc::new(Cell::new(24u32));
+    let bitrate_kbps = Rc::new(Cell::new(5000u32));
+
     let app = libadwaita::Application::builder()
         .application_id("com.github.resolvefy")
         .build();
 
     app.connect_activate(move |app| {
-        let encode_mode = Rc::new(Cell::new(EncodeMode::CRF));
-        let container = Rc::new(Cell::new(Container::MKV));
-        let crf_value = Rc::new(Cell::new(30u32));
-        let bitrate_kbps = Rc::new(Cell::new(5000u32));
-
         let builder = libadwaita::gtk::Builder::from_string(UI_XML);
 
         let window: libadwaita::ApplicationWindow = builder
@@ -69,8 +67,8 @@ pub fn build_ui(
         window.set_application(Some(app));
         window.present();
 
-        widgets::setup_container_row(&container_row, &state, &output_row, &container);
-        widgets::setup_mode_combo(&mode_combo, &encode_mode, &crf_row, &bitrate_row);
+        widgets::setup_container_row(&container_row, &state, &output_row);
+        widgets::setup_mode_combo(&mode_combo, &state, &crf_row, &bitrate_row);
         widgets::setup_crf_row(&crf_row, &crf_value);
         widgets::setup_bitrate_row(&bitrate_row, &bitrate_kbps);
 
@@ -87,7 +85,6 @@ pub fn build_ui(
                 convert_button: &convert_button,
                 status_label: &status_label,
             },
-            container.get(),
         );
 
         widgets::setup_pick_output_btn(
@@ -95,7 +92,6 @@ pub fn build_ui(
             &window,
             &state,
             &output_row,
-            container.get(),
         );
 
         widgets::setup_convert_button(

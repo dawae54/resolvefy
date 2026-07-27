@@ -1,0 +1,148 @@
+import {
+    Button,
+    LineEdit,
+    ComboBox,
+    ProgressIndicator,
+    VerticalBox,
+    HorizontalBox,
+    GroupBox,
+} from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "Resolvefy";
+    preferred-width: 650px;
+    preferred-height: 650px;
+
+    callback pick-input();
+    callback pick-output();
+    callback convert-clicked();
+    callback mode-changed(int);
+    callback container-changed(int);
+
+    in-out property <string> input-path: "Ningún archivo seleccionado";
+    in-out property <string> info-text: "";
+    in-out property <bool> info-visible: false;
+    in-out property <string> output-path: "Sin ruta de salida";
+    in-out property <string> status-text: "Preparado";
+    in-out property <float> progress-value: 0.0;
+    in-out property <bool> output-enabled: false;
+    in-out property <bool> convert-enabled: false;
+    in-out property <string> convert-label: "Convertir";
+    in-out property <bool> bitrate-visible: false;
+    in-out property <string> crf-text: "24";
+    in-out property <string> bitrate-text: "5000";
+
+    VerticalBox {
+        alignment: start;
+        spacing: 12px;
+        padding: 12px;
+
+        GroupBox {
+            title: "Entrada";
+            VerticalBox {
+                HorizontalBox {
+                    Text {
+                        text: root.input-path;
+                        vertical-alignment: center;
+
+                        horizontal-stretch: 1;
+                    }
+
+                    Button {
+                        text: "Seleccionar…";
+                        clicked => {
+                            root.pick-input();
+                        }
+                    }
+                }
+
+                if root.info-visible: Text {
+                    text: root.info-text;
+                    wrap: word-wrap;
+                }
+            }
+        }
+
+        GroupBox {
+            title: "Salida";
+            VerticalBox {
+                HorizontalBox {
+                    Text {
+                        text: root.output-path;
+                        vertical-alignment: center;
+
+                        horizontal-stretch: 1;
+                    }
+
+                    Button {
+                        text: "Seleccionar…";
+                        enabled: root.output-enabled;
+                        clicked => {
+                            root.pick-output();
+                        }
+                    }
+                }
+
+                HorizontalBox {
+                    Text {
+                        text: "Contenedor:";
+                        vertical-alignment: center;
+                    }
+
+                    container-combo := ComboBox {
+                        model: ["MKV", "MP4"];
+                        current-index: 0;
+                        selected => {
+                            root.container-changed(self.current-index);
+                        }
+                    }
+                }
+            }
+        }
+
+        GroupBox {
+            title: "Codificación";
+            VerticalBox {
+                mode-combo := ComboBox {
+                    model: ["CRF (calidad constante)", "Bitrate constante (CBR)"];
+                    current-index: 0;
+                    selected => {
+                        root.mode-changed(self.current-index);
+                    }
+                }
+
+                if !root.bitrate-visible: LineEdit {
+                    text: root.crf-text;
+                    placeholder-text: "Valor CRF (1–63)";
+                    edited => {
+                        root.crf-text = self.text;
+                    }
+                }
+                if root.bitrate-visible: LineEdit {
+                    text: root.bitrate-text;
+                    placeholder-text: "Bitrate (kbps)";
+                    edited => {
+                        root.bitrate-text = self.text;
+                    }
+                }
+            }
+        }
+
+        Text {
+            text: root.status-text;
+        }
+
+        ProgressIndicator {
+            progress: root.progress-value / 100.;
+        }
+
+        Button {
+            text: root.convert-label;
+            enabled: root.convert-enabled;
+            primary: true;
+            clicked => {
+                root.convert-clicked();
+            }
+        }
+    }
+}

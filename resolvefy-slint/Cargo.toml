@@ -1,0 +1,33 @@
+[package]
+name = "resolvefy-slint"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Convert video files to be compatible with DaVinci Resolve (Slint)"
+
+[dependencies]
+resolvefy-core = {path = "../resolvefy-core"}
+slint = "1.9"
+rfd = "0.15"
+
+[build-dependencies]
+slint-build = "1.9"
+
+[package.metadata.deb]
+maintainer = "Álvaro Berenguer"
+copyright = "2026, Álvaro Berenguer"
+extended-description = "Convert video files to be compatible with DaVinci Resolve using a Slint interface"
+section = "utils"
+priority = "optional"
+depends = "ffmpeg (>= 7.0)"
+assets = [
+  ["target/release/resolvefy-slint", "usr/bin/resolvefy-slint", "755"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+  {source = "target/release/resolvefy-slint", dest = "/usr/bin/resolvefy-slint", mode = "755"},
+]
+
+[package.metadata.generate-rpm.requires]
+ffmpeg = ">= 7.0"

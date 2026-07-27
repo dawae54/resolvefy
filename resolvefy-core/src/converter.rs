@@ -8,16 +8,18 @@ use std::path::{Path, PathBuf};
 pub use convert::convert;
 pub use detect::detect_input;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum EncodeMode {
+    #[default]
     CRF,
     CBR,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Container {
+    #[default]
     MKV,
     MP4,
 }

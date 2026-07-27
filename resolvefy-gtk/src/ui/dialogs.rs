@@ -5,8 +5,8 @@ use libadwaita::gtk::gio;
 use libadwaita::gtk::glib::clone;
 use libadwaita::prelude::*;
 
-use crate::app::AppState;
-use crate::converter::{self, Container};
+use resolvefy_core::AppState;
+use resolvefy_core::converter::{self, Container};
 
 pub struct InputWidgets<'a> {
     pub state: &'a Rc<RefCell<AppState>>,

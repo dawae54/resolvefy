@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::converter::InputInfo;
+use crate::converter::{Container, EncodeMode, InputInfo};
 
 pub struct ProgressState {
     pub progress: f64,
@@ -14,6 +14,8 @@ pub struct AppState {
     pub input_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
     pub input_info: Option<InputInfo>,
+    pub container: Container,
+    pub encode_mode: EncodeMode,
 }
 
 impl Default for ProgressState {

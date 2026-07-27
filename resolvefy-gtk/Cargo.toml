@@ -1,0 +1,31 @@
+[package]
+name = "resolvefy-gtk"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Convert video files to be compatible with DaVinci Resolve (GTK)"
+
+[dependencies]
+resolvefy-core = {path = "../resolvefy-core"}
+gtk4 = {version = "0.11.4", features = ["v4_14"]}
+libadwaita = {version = "0.9.2", features = ["v1_4"]}
+
+[package.metadata.deb]
+maintainer = "Álvaro Berenguer"
+copyright = "2026, Álvaro Berenguer"
+extended-description = "Convert video files to be compatible with DaVinci Resolve using a GTK4/libadwaita interface"
+section = "utils"
+priority = "optional"
+depends = "ffmpeg (>= 7.0), libadwaita-1-0 (>= 1.4)"
+assets = [
+  ["target/release/resolvefy-gtk", "usr/bin/resolvefy-gtk", "755"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+  {source = "target/release/resolvefy-gtk", dest = "/usr/bin/resolvefy-gtk", mode = "755"},
+]
+
+[package.metadata.generate-rpm.requires]
+ffmpeg = ">= 7.0"
+libadwaita = ">= 1.4"

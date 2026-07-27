@@ -5,15 +5,18 @@ use std::sync::{Arc, Mutex};
 use libadwaita::gtk::glib::clone;
 use libadwaita::prelude::*;
 
-use crate::app::{AppState, ProgressState};
-use crate::converter::{self, Container, EncodeConfig, EncodeMode};
+use resolvefy_core::{AppState, ProgressState};
+use resolvefy_core::converter::{self, EncodeConfig, EncodeMode};
 
 use super::dialogs::{self, InputWidgets};
 
-fn update_output_path(state: &Rc<RefCell<AppState>>, output_row: &libadwaita::ActionRow, container: Container) {
-    let auto_out = state.borrow().input_path.as_ref().map(|path| {
-        converter::default_output_name(path, container)
-    });
+fn update_output_path(state: &Rc<RefCell<AppState>>, output_row: &libadwaita::ActionRow) {
+    let auto_out = {
+        let s = state.borrow();
+        s.input_path.as_ref().map(|path| {
+            converter::default_output_name(path, s.container)
+        })
+    };
     if let Some(out) = auto_out {
         output_row.set_subtitle(&out.display().to_string());
         state.borrow_mut().output_path = Some(out);
@@ -24,7 +27,6 @@ pub fn setup_container_row(
     container_row: &libadwaita::ComboRow,
     state: &Rc<RefCell<AppState>>,
     output_row: &libadwaita::ActionRow,
-    container: &Rc<Cell<Container>>,
 ) {
     container_row.set_model(Some(&libadwaita::gtk::StringList::new(&["MKV", "MP4"])));
 
@@ -33,13 +35,11 @@ pub fn setup_container_row(
         state,
         #[strong]
         output_row,
-        #[strong]
-        container,
         move |row| {
             matches!(row.selected(), 0 | 1).then(|| {
-                let c = if row.selected() == 0 { Container::MKV } else { Container::MP4 };
-                container.set(c);
-                update_output_path(&state, &output_row, c);
+                let c = if row.selected() == 0 { converter::Container::MKV } else { converter::Container::MP4 };
+                state.borrow_mut().container = c;
+                update_output_path(&state, &output_row);
             });
         }
     ));
@@ -47,7 +47,7 @@ pub fn setup_container_row(
 
 pub fn setup_mode_combo(
     mode_combo: &libadwaita::ComboRow,
-    encode_mode: &Rc<Cell<EncodeMode>>,
+    state: &Rc<RefCell<AppState>>,
     crf_row: &libadwaita::EntryRow,
     bitrate_row: &libadwaita::EntryRow,
 ) {
@@ -61,7 +61,7 @@ pub fn setup_mode_combo(
         Some("selected"),
         clone!(
             #[strong]
-            encode_mode,
+            state,
             #[strong]
             crf_row,
             #[strong]
@@ -72,7 +72,7 @@ pub fn setup_mode_combo(
                 } else {
                     EncodeMode::CBR
                 };
-                encode_mode.set(mode);
+                state.borrow_mut().encode_mode = mode;
                 crf_row.set_visible(matches!(mode, EncodeMode::CRF));
                 bitrate_row.set_visible(matches!(mode, EncodeMode::CBR));
             }
@@ -86,7 +86,7 @@ pub fn setup_crf_row(crf_row: &libadwaita::EntryRow, crf_value: &Rc<Cell<u32>>) 
         crf_value,
         move |entry| {
             if let Ok(v) = entry.text().to_string().parse::<i32>() {
-                crf_value.set((v.clamp(0, 63)) as u32);
+                crf_value.set(v.clamp(1, 63) as u32);
             }
         }
     ));
@@ -111,7 +111,6 @@ pub fn setup_pick_input_btn(
     pick_input_btn: &libadwaita::gtk::Button,
     window: &libadwaita::ApplicationWindow,
     w: &InputWidgets<'_>,
-    container: Container,
 ) {
     let state = w.state;
     let input_path_label = w.input_path_label;
@@ -142,6 +141,7 @@ pub fn setup_pick_input_btn(
         #[strong]
         status_label,
         move |_| {
+            let container = state.borrow().container;
             let w = InputWidgets {
                 state: &state,
                 input_path_label: &input_path_label,
@@ -162,7 +162,6 @@ pub fn setup_pick_output_btn(
     window: &libadwaita::ApplicationWindow,
     state: &Rc<RefCell<AppState>>,
     output_row: &libadwaita::ActionRow,
-    container: Container,
 ) {
     pick_output_btn.connect_clicked(clone!(
         #[strong]
@@ -172,12 +171,17 @@ pub fn setup_pick_output_btn(
         #[strong]
         output_row,
         move |_| {
+            let container = state.borrow().container;
             dialogs::open_output_dialog(&window, &state, &output_row, container);
         }
     ));
 }
 
-fn build_encode_config(encode_mode: &Rc<Cell<EncodeMode>>, crf_value: &Rc<Cell<u32>>, bitrate_kbps: &Rc<Cell<u32>>) -> EncodeConfig {
+fn build_encode_config(
+    encode_mode: &Rc<Cell<EncodeMode>>,
+    crf_value: &Rc<Cell<u32>>,
+    bitrate_kbps: &Rc<Cell<u32>>,
+) -> EncodeConfig {
     EncodeConfig {
         mode: encode_mode.get(),
         crf_value: crf_value.get(),
@@ -189,7 +193,7 @@ fn spawn_conversion(
     input: std::path::PathBuf,
     output: std::path::PathBuf,
     config: EncodeConfig,
-    input_info: crate::converter::InputInfo,
+    input_info: resolvefy_core::converter::InputInfo,
     progress_state: Arc<Mutex<ProgressState>>,
 ) {
     let ps = progress_state.clone();
@@ -232,18 +236,17 @@ pub fn setup_convert_button(
         #[strong]
         progress_state,
         move |_| {
-            let (input, output, input_info) = {
+            let (input, output, input_info, config) = {
                 let state_ref = state.borrow();
                 let input = state_ref.input_path.clone();
                 let output = state_ref.output_path.clone();
                 let input_info = state_ref.input_info.clone();
+                let config = build_encode_config(&encode_mode, &crf_value, &bitrate_kbps);
                 match (input, output, input_info) {
-                    (Some(i), Some(o), Some(info)) => (i, o, info),
+                    (Some(i), Some(o), Some(info)) => (i, o, info, config),
                     _ => return,
                 }
             };
-
-            let config = build_encode_config(&encode_mode, &crf_value, &bitrate_kbps);
 
             convert_button.set_sensitive(false);
             convert_button.set_label("Convirtiendo…");
