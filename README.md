@@ -12,26 +12,23 @@ License: see LICENSE (GPL-3.0).
 
 - `resolvefy-core` — Core conversion logic
 - `resolvefy-slint` — Slint UI
-- `resolvefy-gtk` — GTK4/libadwaita UI
 
 ## Dependencies
 
 - Rust toolchain (rustup, stable toolchain)
 - pkg-config, build-essential (C/C++ compilation)
-- GTK4 and libadwaita development packages — e.g., libgtk-4-dev, libadwaita-1-dev
-- gir and GObject Introspection: libgirepository1.0-dev (if required by your distribution)
 - ffmpeg (with SVT-AV1 and libopus support) installed on the system
 
 Examples (Debian/Ubuntu):
 
 ```sh
-sudo apt update && sudo apt install -y build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgirepository1.0-dev ffmpeg xdg-desktop-portal
+sudo apt update && sudo apt install -y build-essential pkg-config ffmpeg
 ```
 
 On Fedora:
 
 ```sh
-sudo dnf install -y gcc-c++ pkgconfig gtk4-devel libadwaita-devel ffmpeg xdg-desktop-portal
+sudo dnf install -y gcc-c++ pkgconfig ffmpeg
 ```
 
 ## Build and run
@@ -48,13 +45,7 @@ Build in release mode:
 cargo build --release
 ```
 
-Run the GTK UI:
-
-```sh
-cargo run --release -p resolvefy-gtk
-```
-
-Run the Slint UI:
+Run:
 
 ```sh
 cargo run --release -p resolvefy-slint
@@ -64,4 +55,3 @@ cargo run --release -p resolvefy-slint
 
 - Encoding options (CRF/CBR mode, values) are in an advanced collapsible section.
 - Ensure the ffmpeg on your system includes the SVT-AV1 encoder and libopus if you need AV1/Opus encoding. Some distributions do not include SVT-AV1 by default; it may require manual compilation or alternative repositories.
-- The GTK UI uses libadwaita file dialogs. In sandboxed desktop environments (e.g., Flatpak), xdg-desktop-portal may still be required by the runtime.
