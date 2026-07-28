@@ -2,13 +2,15 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use resolvefy_core::{AppState, ProgressState};
 use resolvefy_core::converter::{self, EncodeConfig, EncodeMode};
+use resolvefy_core::{AppState, ProgressState};
 
 slint::include_modules!();
 
 fn parse_crf(text: &str) -> u32 {
-    text.parse::<i32>().map(|v| v.clamp(1, 63) as u32).unwrap_or(24)
+    text.parse::<i32>()
+        .map(|v| v.clamp(1, 63) as u32)
+        .unwrap_or(24)
 }
 
 fn parse_bitrate(text: &str) -> u32 {
@@ -24,11 +26,15 @@ fn main() {
         let state = state.clone();
         let window_weak = window.as_weak();
         window.on_pick_input(move || {
-            let Some(window) = window_weak.upgrade() else { return };
+            let Some(window) = window_weak.upgrade() else {
+                return;
+            };
             let dialog = rfd::FileDialog::new()
                 .add_filter("Vídeo", &["mp4", "mkv", "avi", "mov", "webm", "flv", "ts"])
                 .set_title("Seleccionar vídeo");
-            let Some(path) = dialog.pick_file() else { return };
+            let Some(path) = dialog.pick_file() else {
+                return;
+            };
 
             window.set_input_path(path.display().to_string().into());
 
@@ -38,11 +44,23 @@ fn main() {
                     let auto_out = converter::default_output_name(&path);
                     window.set_output_path(auto_out.display().to_string().into());
 
-                    let video_hint = if info.is_video_av1 { "→ copy" } else { "→ SVT-AV1" };
-                    let audio_hint = if info.is_audio_opus { "→ copy" } else { "→ Opus" };
+                    let video_hint = if info.is_video_av1 {
+                        "→ copy"
+                    } else {
+                        "→ SVT-AV1"
+                    };
+                    let audio_hint = if info.is_audio_opus {
+                        "→ copy"
+                    } else {
+                        "→ Opus"
+                    };
                     let info_text = format!(
                         "Video: {} ({}) | Audio: {} ({}) | Duración: {:.1}s",
-                        info.video_codec, video_hint, info.audio_codec, audio_hint, info.duration_secs
+                        info.video_codec,
+                        video_hint,
+                        info.audio_codec,
+                        audio_hint,
+                        info.duration_secs
                     );
 
                     window.set_info_text(info_text.into());
@@ -67,7 +85,9 @@ fn main() {
         let state = state.clone();
         let window_weak = window.as_weak();
         window.on_pick_output(move || {
-            let Some(window) = window_weak.upgrade() else { return };
+            let Some(window) = window_weak.upgrade() else {
+                return;
+            };
             let ext = converter::OUTPUT_EXTENSION;
             let dialog = rfd::FileDialog::new()
                 .add_filter(format!(".{ext}"), &[ext])
@@ -90,8 +110,14 @@ fn main() {
         let state = state.clone();
         let window_weak = window.as_weak();
         window.on_mode_changed(move |index| {
-            let Some(window) = window_weak.upgrade() else { return };
-            let mode = if index == 1 { EncodeMode::CBR } else { EncodeMode::CRF };
+            let Some(window) = window_weak.upgrade() else {
+                return;
+            };
+            let mode = if index == 1 {
+                EncodeMode::CBR
+            } else {
+                EncodeMode::CRF
+            };
             state.borrow_mut().encode_mode = mode;
             window.set_bitrate_visible(index == 1);
         });
@@ -102,7 +128,9 @@ fn main() {
         let progress_state = progress_state.clone();
         let window_weak = window.as_weak();
         window.on_convert_clicked(move || {
-            let Some(window) = window_weak.upgrade() else { return };
+            let Some(window) = window_weak.upgrade() else {
+                return;
+            };
 
             let crf_value = parse_crf(window.get_crf_text().to_string().as_str());
             let bitrate_kbps = parse_bitrate(window.get_bitrate_text().to_string().as_str());
@@ -131,20 +159,30 @@ fn main() {
             let window_weak2 = window.as_weak();
             std::thread::spawn(move || {
                 let ps_for_progress = ps.clone();
-                let result = converter::convert(input, output, config, &input_info, |progress, _time| {
-                    ps_for_progress.lock().unwrap_or_else(|e| e.into_inner()).progress = progress;
-                });
+                let result =
+                    converter::convert(input, output, config, &input_info, |progress, _time| {
+                        ps_for_progress
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner())
+                            .progress = progress;
+                    });
 
                 {
                     let mut ps = ps.lock().unwrap_or_else(|e| e.into_inner());
                     match result {
-                        Ok(()) => { ps.done = true; }
-                        Err(e) => { ps.error = Some(e); }
+                        Ok(()) => {
+                            ps.done = true;
+                        }
+                        Err(e) => {
+                            ps.error = Some(e);
+                        }
                     }
                 }
 
                 let _ = slint::invoke_from_event_loop(move || {
-                    let Some(window) = window_weak2.upgrade() else { return };
+                    let Some(window) = window_weak2.upgrade() else {
+                        return;
+                    };
                     let mut ps = ps.lock().unwrap_or_else(|e| e.into_inner());
 
                     if let Some(err) = ps.error.take() {
@@ -173,7 +211,9 @@ fn main() {
             slint::TimerMode::Repeated,
             std::time::Duration::from_millis(100),
             move || {
-                let Some(window) = window_weak.upgrade() else { return };
+                let Some(window) = window_weak.upgrade() else {
+                    return;
+                };
                 let mut ps = ps.lock().unwrap_or_else(|e| e.into_inner());
 
                 if ps.progress > 0.0 {

@@ -7,12 +7,69 @@ import {
     HorizontalBox,
     GroupBox,
     CheckBox,
+    Palette,
 } from "std-widgets.slint";
+
+component Card inherits Rectangle {
+    in property <string> title;
+
+    background: Palette.control-background;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: Palette.border;
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 10px;
+
+        if root.title != "": Text {
+            text: root.title;
+            font-weight: 600;
+            font-size: 13px;
+            color: Palette.foreground;
+        }
+
+        @children
+    }
+}
+
+component FieldBox inherits Rectangle {
+    in property <string> text-content;
+
+    height: 34px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: Palette.border;
+    background: Palette.background;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+
+        Text {
+            text: root.text-content;
+            font-size: 13px;
+            color: Palette.foreground.transparentize(30%);
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+        }
+    }
+}
+
+component SectionLabel inherits Text {
+    font-weight: 600;
+    font-size: 12px;
+    color: Palette.foreground.transparentize(40%);
+    horizontal-alignment: left;
+}
 
 export component MainWindow inherits Window {
     title: "Resolvefy";
-    preferred-width: 650px;
-    preferred-height: 650px;
+    preferred-width: 600px;
+    preferred-height: 680px;
+
+    background: Palette.background;
 
     callback pick-input();
     callback pick-output();
@@ -35,114 +92,195 @@ export component MainWindow inherits Window {
 
     VerticalBox {
         alignment: start;
-        spacing: 12px;
-        padding: 12px;
+        spacing: 16px;
+        padding: 20px;
+        padding-top: 32px;
 
-        GroupBox {
-            title: "Entrada";
-            VerticalBox {
-                HorizontalBox {
-                    Text {
-                        text: root.input-path;
-                        vertical-alignment: center;
 
-                        horizontal-stretch: 1;
-                    }
+        Card {
+            title: "Archivo de entrada";
 
-                    Button {
-                        text: "Seleccionar…";
-                        clicked => {
-                            root.pick-input();
-                        }
-                    }
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: stretch;
+
+                FieldBox {
+                    text-content: root.input-path;
+                    horizontal-stretch: 1;
                 }
 
-                if root.info-visible: Text {
-                    text: root.info-text;
-                    wrap: word-wrap;
+                Button {
+                    text: "Examinar…";
+                    width: 100px;
+                    clicked => {
+                        root.pick-input();
+                    }
+                }
+            }
+
+            if root.info-visible: Text {
+                text: root.info-text;
+                font-size: 12px;
+                wrap: word-wrap;
+                color: Palette.foreground.transparentize(20%);
+            }
+        }
+
+
+        Card {
+            title: "Guardar como";
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: stretch;
+
+                FieldBox {
+                    text-content: root.output-path;
+                    horizontal-stretch: 1;
+                }
+
+                Button {
+                    text: "Examinar…";
+                    width: 100px;
+                    enabled: root.output-enabled;
+                    clicked => {
+                        root.pick-output();
+                    }
                 }
             }
         }
 
-        GroupBox {
-            title: "Salida";
-            VerticalBox {
-                HorizontalBox {
-                    Text {
-                        text: root.output-path;
-                        vertical-alignment: center;
 
-                        horizontal-stretch: 1;
-                    }
-
-                    Button {
-                        text: "Seleccionar…";
-                        enabled: root.output-enabled;
-                        clicked => {
-                            root.pick-output();
-                        }
-                    }
-                }
-
-            }
-        }
-
-        GroupBox {
+        Card {
             title: "Codificación";
-            VerticalBox {
-                CheckBox {
-                    text: "Opciones avanzadas";
-                    toggled => {
-                        root.advanced-visible = self.checked;
-                    }
+
+            CheckBox {
+                text: "Mostrar opciones avanzadas";
+                toggled => {
+                    root.advanced-visible = self.checked;
+                }
+            }
+
+            Rectangle {
+                height: root.advanced-visible ? 180px : 0px;
+                clip: true;
+                background: transparent;
+
+                animate height {
+                    duration: 250ms;
+                    easing: ease-in-out;
                 }
 
-                if root.advanced-visible: VerticalBox {
+                VerticalLayout {
+                    opacity: root.advanced-visible ? 1.0 : 0.0;
                     spacing: 8px;
 
-                    mode-combo := ComboBox {
+                    animate opacity {
+                        duration: 200ms;
+                        easing: ease-in-out;
+                    }
+
+                    SectionLabel {
+                        text: "Modo";
+                    }
+
+                    ComboBox {
                         model: ["CRF (calidad constante)", "Bitrate constante (CBR)"];
                         current-index: 0;
-                        height: 30px;
+                        height: 32px;
                         selected => {
                             root.mode-changed(self.current-index);
                         }
                     }
 
-                    if !root.bitrate-visible: LineEdit {
-                        text: root.crf-text;
-                        placeholder-text: "Valor CRF (1–63)";
-                        height: 30px;
-                        edited => {
-                            root.crf-text = self.text;
+                    if !root.bitrate-visible: VerticalLayout {
+                        spacing: 4px;
+
+                        SectionLabel {
+                            text: "Valor CRF (1–63)";
+                        }
+
+                        LineEdit {
+                            text: root.crf-text;
+                            placeholder-text: "24";
+                            height: 32px;
+                            edited => {
+                                root.crf-text = self.text;
+                            }
                         }
                     }
-                    if root.bitrate-visible: LineEdit {
-                        text: root.bitrate-text;
-                        placeholder-text: "Bitrate (kbps)";
-                        height: 30px;
-                        edited => {
-                            root.bitrate-text = self.text;
+
+                    if root.bitrate-visible: VerticalLayout {
+                        spacing: 4px;
+
+                        SectionLabel {
+                            text: "Bitrate constante (kbps)";
+                        }
+
+                        LineEdit {
+                            text: root.bitrate-text;
+                            placeholder-text: "5000";
+                            height: 32px;
+                            edited => {
+                                root.bitrate-text = self.text;
+                            }
                         }
                     }
                 }
             }
         }
 
-        Text {
-            text: root.status-text;
-        }
 
-        ProgressIndicator {
-            progress: root.progress-value / 100.;
-        }
+        VerticalLayout {
+            spacing: 8px;
 
-        Button {
-            text: root.convert-label;
-            enabled: root.convert-enabled;
-            primary: true;
-            clicked => {
-                root.convert-clicked();
+            HorizontalLayout {
+                alignment: space-between;
+
+                Text {
+                    text: root.status-text;
+                    font-size: 12px;
+                    color: Palette.foreground.transparentize(40%);
+                    vertical-alignment: center;
+                }
+
+                if root.progress-value > 0: Text {
+                    text: Math.round(root.progress-value) + "%";
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Palette.foreground;
+                    vertical-alignment: center;
+                }
+            }
+
+            Rectangle {
+                height: 6px;
+                border-radius: 3px;
+                background: Palette.border;
+
+                Rectangle {
+                    x: 0;
+                    y: 0;
+                    height: parent.height;
+                    width: parent.width * (root.progress-value / 100);
+                    border-radius: 3px;
+                    background: Palette.accent-background;
+
+                    animate width {
+                        duration: 300ms;
+                        easing: ease-in-out;
+                    }
+                }
+            }
+
+            Button {
+                text: root.convert-label;
+                enabled: root.convert-enabled;
+                primary: true;
+                height: 42px;
+                clicked => {
+                    root.convert-clicked();
+                }
             }
         }
     }

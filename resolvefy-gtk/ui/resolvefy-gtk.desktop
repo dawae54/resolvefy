@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Resolvefy
-GenericName=Video Converter
-Comment=Convert video files to be compatible with DaVinci Resolve
-Exec=resolvefy-gtk
-Categories=AudioVideo;Video;
-Terminal=false
-Icon=media-video
