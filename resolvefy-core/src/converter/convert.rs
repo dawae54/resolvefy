@@ -1,9 +1,34 @@
+//! Video conversion pipeline using `ffmpeg`.
+//!
+//! Spawns an `ffmpeg` process that re-encodes video to AV1 (SVT-AV1) and audio
+//! to Opus, or stream-copies when the codecs are already compatible. Reports
+//! progress via a callback that receives the percentage (0.0–100.0) and current
+//! timestamp.
+
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
 
 use super::{EncodeConfig, EncodeMode, InputInfo};
 
+/// Converts a video file to AV1/Opus in an MP4 container.
+///
+/// If the input video is already AV1 or the audio is already Opus, the
+/// corresponding stream is copied without re-encoding.
+///
+/// # Arguments
+///
+/// * `input` — Path to the source video file.
+/// * `output` — Path for the resulting MP4 file.
+/// * `config` — Encoding parameters (CRF/CBR mode, values).
+/// * `info` — Detected codec information for the input file.
+/// * `progress_cb` — Callback invoked with `(percentage, timestamp)` as
+///   conversion progresses. `percentage` ranges from 0.0 to 100.0.
+///
+/// # Errors
+///
+/// Returns `Err` if `ffmpeg` cannot be spawned, fails during conversion, or
+/// exits with a non-zero status.
 pub fn convert(
     input: PathBuf,
     output: PathBuf,

@@ -1,3 +1,8 @@
+//! Input file detection via `ffprobe`.
+//!
+//! Runs `ffprobe` to extract codec information and duration from a video file,
+//! and determines whether re-encoding is needed.
+
 use std::path::Path;
 use std::process::Command;
 
@@ -22,6 +27,7 @@ struct ProbeOutput {
     format: ProbeFormat,
 }
 
+/// Runs `ffprobe` on the given path and returns the parsed JSON output.
 fn run_ffprobe(path: &Path) -> Result<ProbeOutput, String> {
     let output = Command::new("ffprobe")
         .args([
@@ -46,6 +52,14 @@ fn run_ffprobe(path: &Path) -> Result<ProbeOutput, String> {
         .map_err(|e| format!("failed to parse ffprobe output: {e}"))
 }
 
+/// Detects video and audio codecs and duration for the given input file.
+///
+/// Returns an [`InputInfo`] describing the streams and whether each is already
+/// in the target format (AV1 for video, Opus for audio).
+///
+/// # Errors
+///
+/// Returns `Err` if `ffprobe` cannot be executed or the output cannot be parsed.
 pub fn detect_input(path: &Path) -> Result<InputInfo, String> {
     let probe = run_ffprobe(path)?;
 

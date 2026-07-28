@@ -1,19 +1,34 @@
+//! Application state types shared between the UI and conversion logic.
+
 use std::path::PathBuf;
 
 use crate::converter::{EncodeMode, InputInfo};
 
+/// Real-time progress of an ongoing conversion.
+///
+/// Shared across threads via `Arc<Mutex<ProgressState>>`. The conversion thread
+/// writes progress updates; the UI thread reads them on a timer.
 pub struct ProgressState {
+    /// Current progress percentage (0.0–100.0). Reset to 0.0 after being read.
     pub progress: f64,
+    /// Status message to display in the UI. Cleared after being read.
     pub status: String,
+    /// Set to `true` when conversion finishes successfully.
     pub done: bool,
+    /// Contains an error message if conversion failed.
     pub error: Option<String>,
 }
 
+/// Global application state for the Slint frontend.
 #[derive(Default)]
 pub struct AppState {
+    /// Selected input video file path.
     pub input_path: Option<PathBuf>,
+    /// Selected output file path.
     pub output_path: Option<PathBuf>,
+    /// Detected codec/duration info for the input file.
     pub input_info: Option<InputInfo>,
+    /// Current encoding mode (CRF or CBR).
     pub encode_mode: EncodeMode,
 }
 
