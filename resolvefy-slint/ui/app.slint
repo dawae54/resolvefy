@@ -13,7 +13,7 @@ import {
 component Card inherits Rectangle {
     in property <string> title;
 
-    background: Palette.control-background;
+    background: Palette.alternate-background;
     border-radius: 8px;
     border-width: 1px;
     border-color: Palette.border;
@@ -67,7 +67,7 @@ component SectionLabel inherits Text {
 export component MainWindow inherits Window {
     title: "Resolvefy";
     preferred-width: 600px;
-    preferred-height: 680px;
+    preferred-height: 500px;
 
     background: Palette.background;
 
@@ -111,7 +111,8 @@ export component MainWindow inherits Window {
 
                 Button {
                     text: "Examinar…";
-                    width: 100px;
+                    // width: 100px;
+                    // primary: true;
                     clicked => {
                         root.pick-input();
                     }
@@ -141,7 +142,7 @@ export component MainWindow inherits Window {
 
                 Button {
                     text: "Examinar…";
-                    width: 100px;
+                    // width: 100px;
                     enabled: root.output-enabled;
                     clicked => {
                         root.pick-output();
@@ -152,17 +153,18 @@ export component MainWindow inherits Window {
 
 
         Card {
-            title: "Codificación";
+            title: "Avanzado";
 
             CheckBox {
                 text: "Mostrar opciones avanzadas";
                 toggled => {
                     root.advanced-visible = self.checked;
+
                 }
             }
 
             Rectangle {
-                height: root.advanced-visible ? 180px : 0px;
+                height: root.advanced-visible ? 130px : 0px;
                 clip: true;
                 background: transparent;
 
@@ -174,6 +176,7 @@ export component MainWindow inherits Window {
                 VerticalLayout {
                     opacity: root.advanced-visible ? 1.0 : 0.0;
                     spacing: 8px;
+                    padding: 8px;
 
                     animate opacity {
                         duration: 200ms;
@@ -267,7 +270,7 @@ export component MainWindow inherits Window {
                     background: Palette.accent-background;
 
                     animate width {
-                        duration: 300ms;
+                        duration: 500ms;
                         easing: ease-in-out;
                     }
                 }

@@ -209,7 +209,7 @@ fn main() {
         let ps = progress_state.clone();
         progress_timer.start(
             slint::TimerMode::Repeated,
-            std::time::Duration::from_millis(100),
+            std::time::Duration::from_millis(500),
             move || {
                 let Some(window) = window_weak.upgrade() else {
                     return;
@@ -218,7 +218,6 @@ fn main() {
 
                 if ps.progress > 0.0 {
                     window.set_progress_value(ps.progress as f32);
-                    window.set_status_text(format!("{}%", ps.progress.round() as u32).into());
                     ps.progress = 0.0;
                 }
 
