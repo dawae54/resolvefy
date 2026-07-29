@@ -4050,9 +4050,7 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "resolvefy-core"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "885aa7756b1cada9cad9b9121faca2d3864536ca404cb61bb60f92dca674c09e"
+version = "1.4.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4061,6 +4059,8 @@ dependencies = [
 [[package]]
 name = "resolvefy-core"
 version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28f93924441dbb7845bd93e3efe071f139e8f87a41e107878363713fdfa0daa"
 dependencies = [
  "serde",
  "serde_json",
@@ -4068,9 +4068,9 @@ dependencies = [
 
 [[package]]
 name = "resolvefy-slint"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
- "resolvefy-core 1.4.0",
+ "resolvefy-core 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rfd",
  "slint",
  "slint-build",
