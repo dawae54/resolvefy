@@ -4068,7 +4068,7 @@ dependencies = [
 
 [[package]]
 name = "resolvefy-slint"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "resolvefy-core 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rfd",

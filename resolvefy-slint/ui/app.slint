@@ -8,54 +8,13 @@ import {
     GroupBox,
     CheckBox,
     Palette,
+    TextEdit,
+    ScrollView,
 } from "std-widgets.slint";
 
-component Card inherits Rectangle {
-    in property <string> title;
 
-    background: Palette.alternate-background;
-    border-radius: 8px;
-    border-width: 1px;
-    border-color: Palette.border;
 
-    VerticalBox {
-        padding: 16px;
-        spacing: 10px;
 
-        if root.title != "": Text {
-            text: root.title;
-            font-weight: 600;
-            font-size: 13px;
-            color: Palette.foreground;
-        }
-
-        @children
-    }
-}
-
-component FieldBox inherits Rectangle {
-    in property <string> text-content;
-
-    height: 34px;
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: Palette.border;
-    background: Palette.background;
-
-    HorizontalLayout {
-        padding-left: 10px;
-        padding-right: 10px;
-
-        Text {
-            text: root.text-content;
-            font-size: 13px;
-            color: Palette.foreground.transparentize(30%);
-            vertical-alignment: center;
-            overflow: elide;
-            horizontal-stretch: 1;
-        }
-    }
-}
 
 component SectionLabel inherits Text {
     font-weight: 600;
@@ -67,7 +26,7 @@ component SectionLabel inherits Text {
 export component MainWindow inherits Window {
     title: "Resolvefy";
     preferred-width: 600px;
-    preferred-height: 500px;
+    preferred-height: contenido.preferred-height + contenido.preferred-height / 20;
 
     background: Palette.background;
 
@@ -76,10 +35,10 @@ export component MainWindow inherits Window {
     callback convert-clicked();
     callback mode-changed(int);
 
-    in-out property <string> input-path: "Ningún archivo seleccionado";
+    in-out property <string> input-path: "";
     in-out property <string> info-text: "";
     in-out property <bool> info-visible: false;
-    in-out property <string> output-path: "Sin ruta de salida";
+    in-out property <string> output-path: "";
     in-out property <string> status-text: "Preparado";
     in-out property <float> progress-value: 0.0;
     in-out property <bool> output-enabled: false;
@@ -90,199 +49,191 @@ export component MainWindow inherits Window {
     in-out property <string> crf-text: "24";
     in-out property <string> bitrate-text: "5000";
 
-    VerticalBox {
-        alignment: start;
-        spacing: 16px;
-        padding: 20px;
-        padding-top: 32px;
-
-
-        Card {
-            title: "Archivo de entrada";
-
-            HorizontalLayout {
+    ScrollView {
+        vertical-scrollbar-policy: as-needed;
+        horizontal-scrollbar-policy: as-needed;
+        HorizontalLayout {
+            alignment: space-evenly;
+            contenido := VerticalLayout {
+                alignment: start;
                 spacing: 8px;
-                alignment: stretch;
+                padding: 32px;
+                // max-width: 600px;
+                preferred-width: 600px;
 
-                FieldBox {
-                    text-content: root.input-path;
-                    horizontal-stretch: 1;
-                }
+                GroupBox {
+                    title: "Archivo de entrada";
 
-                Button {
-                    text: "Examinar…";
-                    // width: 100px;
-                    // primary: true;
-                    clicked => {
-                        root.pick-input();
-                    }
-                }
-            }
+                    VerticalLayout {
+                        HorizontalBox {
+                            alignment: stretch;
 
-            if root.info-visible: Text {
-                text: root.info-text;
-                font-size: 12px;
-                wrap: word-wrap;
-                color: Palette.foreground.transparentize(20%);
-            }
-        }
+                            LineEdit {
+                                placeholder-text: "Ningún archivo seleccionado";
+                                text: root.input-path;
+                                read-only: true;
+                            }
 
+                            Button {
+                                text: "Examinar…";
 
-        Card {
-            title: "Guardar como";
-
-            HorizontalLayout {
-                spacing: 8px;
-                alignment: stretch;
-
-                FieldBox {
-                    text-content: root.output-path;
-                    horizontal-stretch: 1;
-                }
-
-                Button {
-                    text: "Examinar…";
-                    // width: 100px;
-                    enabled: root.output-enabled;
-                    clicked => {
-                        root.pick-output();
-                    }
-                }
-            }
-        }
-
-
-        Card {
-            title: "Avanzado";
-
-            CheckBox {
-                text: "Mostrar opciones avanzadas";
-                toggled => {
-                    root.advanced-visible = self.checked;
-
-                }
-            }
-
-            Rectangle {
-                height: root.advanced-visible ? 130px : 0px;
-                clip: true;
-                background: transparent;
-
-                animate height {
-                    duration: 250ms;
-                    easing: ease-in-out;
-                }
-
-                VerticalLayout {
-                    opacity: root.advanced-visible ? 1.0 : 0.0;
-                    spacing: 8px;
-                    padding: 8px;
-
-                    animate opacity {
-                        duration: 200ms;
-                        easing: ease-in-out;
-                    }
-
-                    SectionLabel {
-                        text: "Modo";
-                    }
-
-                    ComboBox {
-                        model: ["CRF (calidad constante)", "Bitrate constante (CBR)"];
-                        current-index: 0;
-                        height: 32px;
-                        selected => {
-                            root.mode-changed(self.current-index);
-                        }
-                    }
-
-                    if !root.bitrate-visible: VerticalLayout {
-                        spacing: 4px;
-
-                        SectionLabel {
-                            text: "Valor CRF (1–63)";
-                        }
-
-                        LineEdit {
-                            text: root.crf-text;
-                            placeholder-text: "24";
-                            height: 32px;
-                            edited => {
-                                root.crf-text = self.text;
+                                clicked => {
+                                    root.pick-input();
+                                }
                             }
                         }
-                    }
 
-                    if root.bitrate-visible: VerticalLayout {
-                        spacing: 4px;
-
-                        SectionLabel {
-                            text: "Bitrate constante (kbps)";
+                        if root.info-visible: Text {
+                            text: root.info-text;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                            color: Palette.foreground.transparentize(20%);
                         }
+                    }
+                }
+
+                GroupBox {
+                    title: "Guardar como";
+
+                    HorizontalBox {
+                        alignment: stretch;
 
                         LineEdit {
-                            text: root.bitrate-text;
-                            placeholder-text: "5000";
-                            height: 32px;
-                            edited => {
-                                root.bitrate-text = self.text;
+                            placeholder-text: "Sin ruta de salida";
+                            text: root.output-path;
+                            read-only: true;
+                            edited(text) => { root.output-path = text }
+                        }
+
+                        Button {
+                            text: "Examinar…";
+                            enabled: root.output-enabled;
+                            clicked => {
+                                root.pick-output();
                             }
                         }
                     }
                 }
-            }
-        }
 
+                GroupBox {
+                    title: "Avanzado";
 
-        VerticalLayout {
-            spacing: 8px;
+                    VerticalLayout {
+                        CheckBox {
+                            text: "Mostrar opciones avanzadas";
+                            toggled => {
+                                root.advanced-visible = self.checked;
+                            }
+                        }
 
-            HorizontalLayout {
-                alignment: space-between;
+                        Rectangle {
+                            height: root.advanced-visible ? rect.min-height : 0px;
+                            clip: true;
+                            background: transparent;
 
-                Text {
-                    text: root.status-text;
-                    font-size: 12px;
-                    color: Palette.foreground.transparentize(40%);
-                    vertical-alignment: center;
-                }
+                            animate height {
+                                duration: 250ms;
+                                easing: ease-in-out;
+                            }
 
-                if root.progress-value > 0: Text {
-                    text: Math.round(root.progress-value) + "%";
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: Palette.foreground;
-                    vertical-alignment: center;
-                }
-            }
+                            rect := VerticalBox {
+                                opacity: root.advanced-visible ? 1.0 : 0.0;
 
-            Rectangle {
-                height: 6px;
-                border-radius: 3px;
-                background: Palette.border;
+                                animate opacity {
+                                    duration: 200ms;
+                                    easing: ease-in-out;
+                                }
 
-                Rectangle {
-                    x: 0;
-                    y: 0;
-                    height: parent.height;
-                    width: parent.width * (root.progress-value / 100);
-                    border-radius: 3px;
-                    background: Palette.accent-background;
+                                VerticalLayout {
+                                    spacing: 4px;
+                                    SectionLabel {
+                                        text: "Modo";
+                                    }
 
-                    animate width {
-                        duration: 500ms;
-                        easing: ease-in-out;
+                                    ComboBox {
+                                        model: ["CRF (calidad constante)", "CBR (bitrate constante)"];
+                                        current-index: 0;
+                                        height: 32px;
+                                        selected => {
+                                            root.mode-changed(self.current-index);
+                                        }
+                                    }
+                                }
+
+                                if !root.bitrate-visible: VerticalLayout {
+                                    spacing: 4px;
+                                    SectionLabel {
+                                        text: "Valor CRF (1–63)";
+                                    }
+
+                                    LineEdit {
+                                        text: root.crf-text;
+                                        placeholder-text: "24";
+                                        height: 32px;
+                                        edited => {
+                                            root.crf-text = self.text;
+                                        }
+                                    }
+                                }
+
+                                if root.bitrate-visible: VerticalBox {
+
+                                    SectionLabel {
+                                        text: "Bitrate constante (kbps)";
+                                    }
+
+                                    LineEdit {
+                                        text: root.bitrate-text;
+                                        placeholder-text: "5000";
+                                        height: 32px;
+                                        edited => {
+                                            root.bitrate-text = self.text;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
 
-            Button {
-                text: root.convert-label;
-                enabled: root.convert-enabled;
-                primary: true;
-                height: 42px;
-                clicked => {
-                    root.convert-clicked();
+                VerticalBox {
+
+                    VerticalLayout {
+                        spacing: 8px;
+                        HorizontalLayout {
+                            alignment: space-between;
+
+                            Text {
+                                text: root.status-text;
+                                font-size: 12px;
+                                color: Palette.foreground.transparentize(40%);
+                                vertical-alignment: center;
+                            }
+
+                            if root.progress-value > 0: Text {
+                                text: Math.round(root.progress-value) + "%";
+                                font-size: 12px;
+                                font-weight: 600;
+                                color: Palette.foreground;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        ProgressIndicator {
+                            progress: root.progress-value / 100;
+                            indeterminate: false;
+                            animate progress { duration: 250ms; }
+                        }
+                    }
+
+                    Button {
+                        text: root.convert-label;
+                        enabled: root.convert-enabled;
+                        primary: true;
+                        clicked => {
+                            root.convert-clicked();
+                        }
+                    }
                 }
             }
         }
