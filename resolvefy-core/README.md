@@ -1,6 +1,6 @@
 # Resolvefy
 
-**PROJECT CREATED ENTIRELY WITH AI**
+**PROJECT CREATED WITH AI**
 
 Resolvefy lets you convert a video (and its audio) to a codec compatible with DaVinci Resolve on Linux, using ffmpeg.
 
