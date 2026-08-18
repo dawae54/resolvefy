@@ -11,7 +11,6 @@ License: see LICENSE (GPL-3.0).
 ## Crates
 
 - `resolvefy-core` — Core conversion logic
-- `resolvefy-slint` — Slint UI
 - `resolvefy-gui` — Libadwaita (GTK4) UI
 
 ## Dependencies
@@ -19,7 +18,6 @@ License: see LICENSE (GPL-3.0).
 - Rust toolchain (rustup, stable toolchain)
 - gcc, pkg-config (C compilation)
 - ffmpeg >= 7.0 (with SVT-AV1 and libopus support)
-- System libraries: fontconfig, xkbcommon, X11, EGL, GL (for the Slint UI)
 - GTK4 and libadwaita development libraries (for the Libadwaita UI)
 
 Examples (Debian/Ubuntu):
@@ -61,7 +59,6 @@ cargo build --release
 Run:
 
 ```sh
-cargo run --release -p resolvefy-slint
 # or with the Libadwaita UI:
 cargo run --release -p resolvefy-gui
 ```
