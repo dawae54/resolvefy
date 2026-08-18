@@ -1,0 +1,134 @@
+using Gtk 4.0;
+using Adw 1;
+
+Adw.Window window {
+  title: "Resolvefy";
+  default-width: 600;
+  default-height: 660;
+
+  content: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+    }
+
+    content: Adw.Clamp {
+      maximum-size: 600;
+
+      child: Box {
+        orientation: vertical;
+        spacing: 16;
+        margin-top: 24;
+        margin-bottom: 24;
+        margin-start: 24;
+        margin-end: 24;
+
+        Adw.PreferencesGroup {
+          title: "Archivo de entrada";
+
+          Adw.ActionRow input_row {
+            title: "Vídeo de entrada";
+            subtitle: "Ningún archivo seleccionado";
+
+            [suffix]
+            Button input_button {
+              label: "Examinar…";
+            }
+          }
+
+          Label info_label {
+            css-classes: ["dim-label"];
+            wrap: true;
+            xalign: 0;
+            visible: false;
+          }
+        }
+
+        Adw.PreferencesGroup {
+          title: "Guardar como";
+
+          Adw.ActionRow output_row {
+            title: "Archivo de salida";
+            subtitle: "Sin ruta de salida";
+
+            [suffix]
+            Button output_button {
+              label: "Examinar…";
+              sensitive: false;
+            }
+          }
+        }
+
+        Adw.PreferencesGroup {
+          Adw.ExpanderRow {
+            title: "Avanzado";
+            subtitle: "Opciones de codificación";
+
+            Adw.ActionRow mode_row {
+              title: "Modo";
+
+              [suffix]
+              DropDown mode_combo {
+              }
+            }
+
+            Adw.ActionRow crf_row {
+              title: "Valor CRF (1–63)";
+
+              [suffix]
+              SpinButton crf_spin {
+                adjustment: Adjustment {
+                  lower: 1;
+                  upper: 63;
+                  step-increment: 1;
+                  value: 24;
+                };
+              }
+            }
+
+            Adw.ActionRow bitrate_row {
+              title: "Bitrate constante (kbps)";
+
+              [suffix]
+              SpinButton bitrate_spin {
+                adjustment: Adjustment {
+                  lower: 100;
+                  upper: 100000;
+                  step-increment: 100;
+                  value: 5000;
+                };
+              }
+            }
+          }
+        }
+
+        Box {
+          orientation: horizontal;
+          spacing: 8;
+
+          Label status_label {
+            label: "Preparado";
+            css-classes: ["dim-label"];
+            xalign: 0;
+            hexpand: true;
+          }
+
+          Label percent_label {
+            label: "0%";
+            xalign: 1;
+            visible: false;
+          }
+        }
+
+        ProgressBar progress_bar {
+        }
+
+        Button convert_button {
+          label: "Convertir";
+          css-classes: ["suggested-action"];
+          hexpand: true;
+          sensitive: false;
+        }
+      };
+    };
+  };
+}
