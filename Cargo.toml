@@ -1,5 +1,5 @@
 [workspace]
-members = ["resolvefy-core", "resolvefy-slint"]
+members = ["resolvefy-core", "resolvefy-slint", "resolvefy-gui"]
 resolver = "3"
 
 [workspace.package]

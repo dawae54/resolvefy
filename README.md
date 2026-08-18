@@ -12,6 +12,7 @@ License: see LICENSE (GPL-3.0).
 
 - `resolvefy-core` — Core conversion logic
 - `resolvefy-slint` — Slint UI
+- `resolvefy-gui` — Libadwaita (GTK4) UI
 
 ## Dependencies
 
@@ -19,6 +20,7 @@ License: see LICENSE (GPL-3.0).
 - gcc, pkg-config (C compilation)
 - ffmpeg >= 7.0 (with SVT-AV1 and libopus support)
 - System libraries: fontconfig, xkbcommon, X11, EGL, GL (for the Slint UI)
+- GTK4 and libadwaita development libraries (for the Libadwaita UI)
 
 Examples (Debian/Ubuntu):
 
@@ -27,7 +29,8 @@ sudo apt update && sudo apt install -y \
     gcc pkg-config \
     ffmpeg \
     libfontconfig-dev libxkbcommon-dev \
-    libx11-dev libegl1-mesa-dev libgl1-mesa-dev
+    libx11-dev libegl1-mesa-dev libgl1-mesa-dev \
+    libgtk-4-dev libadwaita-1-dev
 ```
 
 On Fedora:
@@ -37,7 +40,8 @@ sudo dnf install -y \
     gcc pkgconfig \
     ffmpeg \
     fontconfig-devel libxkbcommon-devel \
-    libX11-devel mesa-libEGL-devel mesa-libGL-devel
+    libX11-devel mesa-libEGL-devel mesa-libGL-devel \
+    gtk4-devel libadwaita-devel
 ```
 
 ## Build and run
@@ -58,6 +62,8 @@ Run:
 
 ```sh
 cargo run --release -p resolvefy-slint
+# or with the Libadwaita UI:
+cargo run --release -p resolvefy-gui
 ```
 
 ## Notes
