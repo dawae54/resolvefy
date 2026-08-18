@@ -2,7 +2,7 @@ using Gtk 4.0;
 using Adw 1;
 
 Adw.Window window {
-  title: "Resolvefy";
+  title: _("Resolvefy");
   default-width: 500;
   default-height: 600;
 
@@ -24,48 +24,50 @@ Adw.Window window {
           margin-end: 24;
 
           Adw.PreferencesGroup {
-            title: "Entrada";
+            title: _("Entrada");
+
             Adw.ActionRow input_row {
-              title: "Archivo de entrada";
-              subtitle: "Ningún archivo seleccionado";
+              title: _("Archivo de entrada");
+              subtitle: _("Ningún archivo seleccionado");
 
               [suffix]
               Button input_button {
-                label: "Examinar…";
+                label: _("Examinar…");
                 valign: center;
               }
             }
 
             Adw.ExpanderRow info_group {
-              title: "Información del archivo";
+              title: _("Información del archivo");
               sensitive: false;
 
               Adw.ActionRow codec_video_row {
-                title: "Códec de vídeo";
-                subtitle: "—";
+                title: _("Códec de vídeo");
+                subtitle: _("—");
               }
 
               Adw.ActionRow codec_audio_row {
-                title: "Códec de audio";
-                subtitle: "—";
+                title: _("Códec de audio");
+                subtitle: _("—");
               }
 
               Adw.ActionRow duration_row {
-                title: "Duración";
-                subtitle: "—";
+                title: _("Duración");
+                subtitle: _("—");
               }
             }
           }
 
           Adw.PreferencesGroup {
-            title: "Salida";
+            title: _("Salida");
+
             Adw.ActionRow output_row {
-              title: "Archivo de salida";
-              subtitle: "Sin ruta de salida";
+              title: _("Archivo de salida");
+              subtitle: _("Sin ruta de salida");
 
               [suffix]
               Button output_button {
-                label: "Examinar…";
+                label: _("Examinar…");
                 sensitive: false;
                 valign: center;
               }
@@ -73,12 +75,13 @@ Adw.Window window {
           }
 
           Adw.PreferencesGroup {
-            title: "Avanzado";
+            title: _("Avanzado");
+
             Adw.ExpanderRow {
-              title: "Opciones de codificación";
+              title: _("Opciones de codificación");
 
               Adw.ActionRow mode_row {
-                title: "Modo";
+                title: _("Modo");
 
                 [suffix]
                 DropDown mode_combo {
@@ -87,7 +90,7 @@ Adw.Window window {
               }
 
               Adw.ActionRow crf_row {
-                title: "Valor CRF (1–63)";
+                title: _("Valor CRF (1–63)");
 
                 [suffix]
                 SpinButton crf_spin {
@@ -103,7 +106,7 @@ Adw.Window window {
               }
 
               Adw.ActionRow bitrate_row {
-                title: "Bitrate constante (kbps)";
+                title: _("Bitrate constante (kbps)");
                 visible: false;
 
                 [suffix]
@@ -111,8 +114,8 @@ Adw.Window window {
                   adjustment: Adjustment {
                     lower: 100;
                     upper: 100000;
-                    step-increment: 100;
                     value: 5000;
+                    step-increment: 100;
                   };
 
                   valign: center;
@@ -126,26 +129,29 @@ Adw.Window window {
             spacing: 8;
 
             Label status_label {
-              label: "Preparado";
+              label: _("Preparado");
               xalign: 0;
               hexpand: true;
             }
 
             Label percent_label {
-              label: "0%";
+              label: _("0%");
               xalign: 1;
               visible: false;
             }
           }
 
-          ProgressBar progress_bar {}
+          ProgressBar progress_bar {
+            text: _("");
+          }
 
           Button convert_button {
-            label: "Convertir";
+            label: _("Convertir");
 
-            css-classes: [
+            styles [
               "suggested-action",
-            ];
+              "pill",
+            ]
 
             hexpand: true;
             sensitive: false;
