@@ -6,4 +6,5 @@ Comment=Convert video files to be compatible with DaVinci Resolve
 Exec=resolvefy-gui
 Categories=AudioVideo;Video;
 Terminal=false
-Icon=media-video
+Icon=resolvefy-gui
+StartupWMClass=io.github.dawae54.Resolvefy

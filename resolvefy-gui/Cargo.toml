@@ -1,10 +1,11 @@
 [package]
 name = "resolvefy-gui"
-version = "1.6.0"
+version = "1.0.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
+workspace = ".."
 description = "Convert video files to be compatible with DaVinci Resolve (Libadwaita UI)"
 keywords = ["ffmpeg", "davinci-resolve", "video", "gtk", "adwaita"]
 categories = ["multimedia::video", "gui"]
@@ -20,17 +21,36 @@ copyright = "2026, Álvaro Berenguer"
 extended-description = "Convert video files to be compatible with DaVinci Resolve using a Libadwaita interface"
 section = "utils"
 priority = "optional"
-depends = "ffmpeg (>= 7.0)"
+depends = "libgtk-4-1 (>= 4.22), libadwaita-1-0 (>= 1.4), ffmpeg (>= 7.0)"
 assets = [
   ["target/release/resolvefy-gui", "usr/bin/resolvefy-gui", "755"],
   ["ui/resolvefy-gui.desktop", "usr/share/applications/resolvefy-gui.desktop", "644"],
+  ["ui/resolvefy-gui.png", "usr/share/icons/hicolor/256x256/apps/resolvefy-gui.png", "644"],
 ]
 
 [package.metadata.generate-rpm]
 assets = [
   {source = "target/release/resolvefy-gui", dest = "/usr/bin/resolvefy-gui", mode = "755"},
   {source = "ui/resolvefy-gui.desktop", dest = "/usr/share/applications/resolvefy-gui.desktop", mode = "644"},
+  {source = "ui/resolvefy-gui.png", dest = "/usr/share/icons/hicolor/256x256/apps/resolvefy-gui.png", mode = "644"},
 ]
 
 [package.metadata.generate-rpm.requires]
+gtk4 = ">= 4.22"
+libadwaita = ">= 1.4"
 ffmpeg = ">= 7.0"
+
+[package.metadata.appimage]
+icon = "ui/resolvefy-gui.png"
+desktop_entry = "ui/resolvefy-gui.desktop"
+auto_link = true
+auto_link_exclude_list = [
+  "libc.so*",
+  "libdl.so*",
+  "libm.so*",
+  "libpthread.so*",
+  "librt.so*",
+  "ld-linux*",
+  "libgcc_s.so*",
+  "libstdc++.so*",
+]

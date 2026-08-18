@@ -10,7 +10,7 @@ use libadwaita::prelude::*;
 use resolvefy_core::converter::{self, EncodeConfig, EncodeMode};
 use resolvefy_core::{AppState, ProgressState};
 
-const UI_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/ui/window.ui");
+const UI_XML: &str = include_str!("../ui/window.ui");
 
 fn video_filters() -> gio::ListStore {
     let filter = gtk4::FileFilter::new();
@@ -24,7 +24,7 @@ fn video_filters() -> gio::ListStore {
 }
 
 pub fn build_ui(app: &libadwaita::Application) {
-    let builder = gtk4::Builder::from_file(UI_PATH);
+    let builder = gtk4::Builder::from_string(UI_XML);
 
     let window = builder
         .object::<libadwaita::Window>("window")
@@ -34,7 +34,12 @@ pub fn build_ui(app: &libadwaita::Application) {
 
     let input_row: libadwaita::ActionRow = builder.object("input_row").expect("id faltante");
     let input_button: gtk4::Button = builder.object("input_button").expect("id faltante");
-    let info_label: gtk4::Label = builder.object("info_label").expect("id faltante");
+    let info_group: libadwaita::ExpanderRow = builder.object("info_group").expect("id faltante");
+    let codec_video_row: libadwaita::ActionRow =
+        builder.object("codec_video_row").expect("id faltante");
+    let codec_audio_row: libadwaita::ActionRow =
+        builder.object("codec_audio_row").expect("id faltante");
+    let duration_row: libadwaita::ActionRow = builder.object("duration_row").expect("id faltante");
     let output_row: libadwaita::ActionRow = builder.object("output_row").expect("id faltante");
     let output_button: gtk4::Button = builder.object("output_button").expect("id faltante");
     let mode_combo: gtk4::DropDown = builder.object("mode_combo").expect("id faltante");
@@ -84,7 +89,13 @@ pub fn build_ui(app: &libadwaita::Application) {
         #[strong]
         input_row,
         #[strong]
-        info_label,
+        info_group,
+        #[strong]
+        codec_video_row,
+        #[strong]
+        codec_audio_row,
+        #[strong]
+        duration_row,
         #[strong]
         output_row,
         #[strong]
@@ -103,7 +114,13 @@ pub fn build_ui(app: &libadwaita::Application) {
                     #[strong]
                     input_row,
                     #[strong]
-                    info_label,
+                    info_group,
+                    #[strong]
+                    codec_video_row,
+                    #[strong]
+                    codec_audio_row,
+                    #[strong]
+                    duration_row,
                     #[strong]
                     output_row,
                     #[strong]
@@ -139,15 +156,13 @@ pub fn build_ui(app: &libadwaita::Application) {
                                 } else {
                                     "→ Opus"
                                 };
-                                info_label.set_label(&format!(
-                                    "Video: {} ({}) | Audio: {} ({}) | Duración: {}",
-                                    info.video_codec,
-                                    video_hint,
-                                    info.audio_codec,
-                                    audio_hint,
-                                    converter::format_duration(info.duration_secs)
-                                ));
-                                info_label.set_visible(true);
+                                codec_video_row
+                                    .set_subtitle(&format!("{} {video_hint}", info.video_codec));
+                                codec_audio_row
+                                    .set_subtitle(&format!("{} {audio_hint}", info.audio_codec));
+                                duration_row
+                                    .set_subtitle(&converter::format_duration(info.duration_secs));
+                                info_group.set_sensitive(true);
                                 output_button.set_sensitive(true);
                                 convert_button.set_sensitive(true);
                                 status_label.set_label("Preparado");
@@ -219,6 +234,10 @@ pub fn build_ui(app: &libadwaita::Application) {
         #[strong]
         convert_button,
         #[strong]
+        progress_bar,
+        #[strong]
+        percent_label,
+        #[strong]
         state,
         #[strong]
         progress_state,
@@ -244,7 +263,10 @@ pub fn build_ui(app: &libadwaita::Application) {
 
             convert_button.set_sensitive(false);
             convert_button.set_label("Convirtiendo…");
-            status_label.set_label("Iniciando conversión...");
+            status_label.set_label("Convirtiendo...");
+            progress_bar.set_fraction(0.0);
+            progress_bar.remove_css_class("success");
+            percent_label.set_visible(false);
 
             let ps = progress_state.clone();
             std::thread::spawn(move || {
@@ -307,9 +329,11 @@ pub fn build_ui(app: &libadwaita::Application) {
 
                 if ps.done {
                     ps.done = false;
-                    progress_bar.set_fraction(0.0);
-                    percent_label.set_visible(false);
-                    status_label.set_label("Preparado");
+                    progress_bar.set_fraction(1.0);
+                    progress_bar.add_css_class("success");
+                    percent_label.set_label("100%");
+                    percent_label.set_visible(true);
+                    status_label.set_label("Terminado");
                     convert_button.set_sensitive(true);
                     convert_button.set_label("Convertir");
                 }

@@ -4,130 +4,153 @@ using Adw 1;
 Adw.Window window {
   title: "Resolvefy";
   default-width: 600;
-  default-height: 660;
+  default-height: 600;
 
   content: Adw.ToolbarView {
     [top]
-    Adw.HeaderBar {
-    }
+    Adw.HeaderBar {}
 
-    content: Adw.Clamp {
-      maximum-size: 600;
+    content: Gtk.ScrolledWindow {
+      vscrollbar-policy: automatic;
 
-      child: Box {
-        orientation: vertical;
-        spacing: 16;
-        margin-top: 24;
-        margin-bottom: 24;
-        margin-start: 24;
-        margin-end: 24;
+      child: Adw.Clamp {
+        maximum-size: 500;
 
-        Adw.PreferencesGroup {
-          title: "Archivo de entrada";
+        child: Box {
+          orientation: vertical;
+          spacing: 12;
+          margin-bottom: 24;
+          margin-start: 24;
+          margin-end: 24;
 
-          Adw.ActionRow input_row {
-            title: "Vídeo de entrada";
-            subtitle: "Ningún archivo seleccionado";
+          Adw.PreferencesGroup {
+            title: "Entrada";
+            Adw.ActionRow input_row {
+              title: "Archivo de entrada";
+              subtitle: "Ningún archivo seleccionado";
 
-            [suffix]
-            Button input_button {
-              label: "Examinar…";
+              [suffix]
+              Button input_button {
+                label: "Examinar…";
+                valign: center;
+              }
             }
-          }
 
-          Label info_label {
-            css-classes: ["dim-label"];
-            wrap: true;
-            xalign: 0;
-            visible: false;
-          }
-        }
-
-        Adw.PreferencesGroup {
-          title: "Guardar como";
-
-          Adw.ActionRow output_row {
-            title: "Archivo de salida";
-            subtitle: "Sin ruta de salida";
-
-            [suffix]
-            Button output_button {
-              label: "Examinar…";
+            Adw.ExpanderRow info_group {
+              title: "Información del archivo";
               sensitive: false;
+
+              Adw.ActionRow codec_video_row {
+                title: "Códec de vídeo";
+                subtitle: "—";
+              }
+
+              Adw.ActionRow codec_audio_row {
+                title: "Códec de audio";
+                subtitle: "—";
+              }
+
+              Adw.ActionRow duration_row {
+                title: "Duración";
+                subtitle: "—";
+              }
             }
           }
-        }
 
-        Adw.PreferencesGroup {
-          Adw.ExpanderRow {
+          Adw.PreferencesGroup {
+            title: "Salida";
+            Adw.ActionRow output_row {
+              title: "Archivo de salida";
+              subtitle: "Sin ruta de salida";
+
+              [suffix]
+              Button output_button {
+                label: "Examinar…";
+                sensitive: false;
+                valign: center;
+              }
+            }
+          }
+
+          Adw.PreferencesGroup {
             title: "Avanzado";
-            subtitle: "Opciones de codificación";
+            Adw.ExpanderRow {
+              title: "Opciones de codificación";
 
-            Adw.ActionRow mode_row {
-              title: "Modo";
+              Adw.ActionRow mode_row {
+                title: "Modo";
 
-              [suffix]
-              DropDown mode_combo {
+                [suffix]
+                DropDown mode_combo {
+                  valign: center;
+                }
               }
-            }
 
-            Adw.ActionRow crf_row {
-              title: "Valor CRF (1–63)";
+              Adw.ActionRow crf_row {
+                title: "Valor CRF (1–63)";
 
-              [suffix]
-              SpinButton crf_spin {
-                adjustment: Adjustment {
-                  lower: 1;
-                  upper: 63;
-                  step-increment: 1;
-                  value: 24;
-                };
+                [suffix]
+                SpinButton crf_spin {
+                  adjustment: Adjustment {
+                    lower: 1;
+                    upper: 63;
+                    step-increment: 1;
+                    value: 24;
+                  };
+
+                  valign: center;
+                }
               }
-            }
 
-            Adw.ActionRow bitrate_row {
-              title: "Bitrate constante (kbps)";
+              Adw.ActionRow bitrate_row {
+                title: "Bitrate constante (kbps)";
+                visible: false;
 
-              [suffix]
-              SpinButton bitrate_spin {
-                adjustment: Adjustment {
-                  lower: 100;
-                  upper: 100000;
-                  step-increment: 100;
-                  value: 5000;
-                };
+                [suffix]
+                SpinButton bitrate_spin {
+                  adjustment: Adjustment {
+                    lower: 100;
+                    upper: 100000;
+                    step-increment: 100;
+                    value: 5000;
+                  };
+
+                  valign: center;
+                }
               }
             }
           }
-        }
 
-        Box {
-          orientation: horizontal;
-          spacing: 8;
+          Box {
+            orientation: horizontal;
+            spacing: 8;
 
-          Label status_label {
-            label: "Preparado";
-            css-classes: ["dim-label"];
-            xalign: 0;
+            Label status_label {
+              label: "Preparado";
+              xalign: 0;
+              hexpand: true;
+            }
+
+            Label percent_label {
+              label: "0%";
+              xalign: 1;
+              visible: false;
+            }
+          }
+
+          ProgressBar progress_bar {}
+
+          Button convert_button {
+            label: "Convertir";
+
+            css-classes: [
+              "suggested-action",
+            ];
+
             hexpand: true;
+            sensitive: false;
           }
-
-          Label percent_label {
-            label: "0%";
-            xalign: 1;
-            visible: false;
-          }
-        }
-
-        ProgressBar progress_bar {
-        }
-
-        Button convert_button {
-          label: "Convertir";
-          css-classes: ["suggested-action"];
-          hexpand: true;
-          sensitive: false;
-        }
+        };
       };
     };
   };
